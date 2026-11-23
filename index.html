@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yaaden — Covoiturage en Guinée | Un service Digifind</title>
+<meta name="description" content="Yaaden, le covoiturage en Guinée : trouvez une place Conakry – Kindia, Labé, Kankan… ou publiez votre trajet. Paiement en espèces ou Orange Money. Un service Digifind.">
+<meta name="theme-color" content="#0E2A47">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Yaaden">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+
+<!-- ====== Icônes SVG réutilisables ====== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="yaaden-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0E2A47"/>
+      <stop offset="1" stop-color="#0B5E4B"/>
+    </linearGradient>
+    <symbol id="logo-yaaden" viewBox="0 0 512 512">
+      <rect width="512" height="512" rx="112" fill="url(#yaaden-grad)"/>
+      <path d="M256 96 C 200 180, 312 260, 256 340 C 226 384, 244 420, 256 448" fill="none" stroke="#00B894" stroke-width="26" stroke-linecap="round" stroke-dasharray="1 44"/>
+      <g fill="#ffffff">
+        <path d="M136 300 L164 218 Q172 192 200 192 L312 192 Q340 192 348 218 L376 300 Q392 306 392 322 L392 344 Q392 360 376 360 L136 360 Q120 360 120 344 L120 322 Q120 306 136 300 Z"/>
+        <circle cx="176" cy="360" r="34" fill="#0E2A47"/><circle cx="176" cy="360" r="16" fill="#ffffff"/>
+        <circle cx="336" cy="360" r="34" fill="#0E2A47"/><circle cx="336" cy="360" r="16" fill="#ffffff"/>
+      </g>
+      <path d="M188 224 L212 224 L212 264 L176 264 Z M324 224 L300 224 L300 264 L336 264 Z" fill="#00B894"/>
+      <rect x="228" y="224" width="56" height="40" rx="8" fill="#00B894"/>
+      <circle cx="256" cy="96" r="20" fill="#FFC531"/>
+      <circle cx="256" cy="448" r="20" fill="#FFC531"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 9 V7 a2 2 0 0 1 2-2 h14 a2 2 0 0 1 2 2 v2 a2 2 0 0 0 0 4 v2 a2 2 0 0 1-2 2 H5 a2 2 0 0 1-2-2 v-2 a2 2 0 0 0 0-4 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="14" y1="7" x2="14" y2="17" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21 a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21 s-7-5.5-7-11 a7 7 0 0 1 14 0 c0 5.5-7 11-7 11 Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" fill="currentColor"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/><line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-seat" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 20 a5.5 5.5 0 0 1 11 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 8.5 a2.8 2.8 0 1 1 2 4.7 M17.5 15.5 a4.5 4.5 0 0 1 3 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5 L14.9 8.6 L21.5 9.3 L16.7 13.9 L18 20.5 L12 17.2 L6 20.5 L7.3 13.9 L2.5 9.3 L9.1 8.6 Z" fill="currentColor"/></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><path d="M4 16 L5.5 10.5 Q6 8.5 8 8.5 L16 8.5 Q18 8.5 18.5 10.5 L20 16 Q21 16.5 21 17.5 L21 19 Q21 20 20 20 L4 20 Q3 20 3 19 L3 17.5 Q3 16.5 4 16 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="8" cy="20" r="1.8" fill="currentColor"/><circle cx="16" cy="20" r="1.8" fill="currentColor"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4 v13 M7 17 l-3-3 M7 17 l3-3 M17 20 V7 M17 7 l3 3 M17 7 l-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5 L9.5 18 L20 6.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7 v5 l3.5 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 8 h12 l-1 12 a2 2 0 0 1-2 2 H9 a2 2 0 0 1-2-2 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 8 a3 3 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18 V6 l11-2 v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 2 v20 M4 6 l16 12 M20 6 L4 18 M12 2 l-2 3 M12 2 l2 3 M12 22 l-2-3 M12 22 l2-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-wa" viewBox="0 0 24 24"><path d="M12 2 a10 10 0 0 0-8.6 15.1 L2 22 l5-1.3 A10 10 0 1 0 12 2 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 8.8 c.5-1.1 1.3-1.1 1.7-.2 l.7 1.5 c.2.4 0 .9-.4 1.2 l-.6.5 c.7 1.4 1.8 2.5 3.2 3.2 l.5-.6 c.3-.4.8-.6 1.2-.4 l1.5.7 c.9.4.9 1.2-.2 1.7 -2.9 1.3-6.9-2.7-8.2-5.6 -0.4-1 0.1-1.9 0.6-3 Z" fill="currentColor"/></symbol>
+    <symbol id="i-money" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="5.5" cy="9.5" r=".8" fill="currentColor"/><circle cx="18.5" cy="14.5" r=".8" fill="currentColor"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2 L20 5.5 V11 c0 5-3.5 8.5-8 10 -4.5-1.5-8-5-8-10 V5.5 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 12 l2.5 2.5 L15.5 9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4 h4 l2 5 -2.5 1.5 a12 12 0 0 0 5 5 L15 13 l5 2 v4 a2 2 0 0 1-2 2 A16 16 0 0 1 3 6 a2 2 0 0 1 2-2 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6 l6 6 -6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- ====== En-tête ====== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-logo" aria-hidden="true"><use href="#logo-yaaden"/></svg>
+      <div class="brand-text">
+        <span class="brand-name">Yaaden</span>
+        <span class="brand-sub">Covoiturage en Guinée</span>
+      </div>
+    </div>
+    <span class="badge-digifind">Un service <strong>Digifind</strong></span>
+  </header>
+
+  <main>
+    <!-- ================= ÉCRAN : RECHERCHE ================= -->
+    <section class="screen active" id="screen-search">
+      <div class="hero">
+        <h1>Voyagez ensemble,<br>payez moins cher.</h1>
+        <p>En ville à Conakry ou entre villes — Kindia, Labé, Kankan et partout en Guinée.</p>
+      </div>
+
+      <form class="search-card" id="search-form" autocomplete="off">
+        <div class="segmented" role="tablist" aria-label="Type de trajet">
+          <button type="button" class="seg-btn active" data-search-type="inter" role="tab">Entre villes</button>
+          <button type="button" class="seg-btn" data-search-type="ville" role="tab">En ville · Conakry</button>
+        </div>
+        <label class="field">
+          <span class="field-label"><svg class="ic"><use href="#i-pin"/></svg> Départ</span>
+          <select id="from" required></select>
+        </label>
+        <button type="button" class="swap-btn" id="swap-btn" aria-label="Inverser départ et arrivée">
+          <svg class="ic"><use href="#i-swap"/></svg>
+        </button>
+        <label class="field">
+          <span class="field-label"><svg class="ic"><use href="#i-pin"/></svg> Arrivée</span>
+          <select id="to" required></select>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-cal"/></svg> Date</span>
+            <input type="date" id="date" required>
+          </label>
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-seat"/></svg> Passagers</span>
+            <div class="stepper">
+              <button type="button" class="step-btn" data-step="-1" aria-label="Moins de passagers">−</button>
+              <span class="step-val" id="passengers-val">1</span>
+              <button type="button" class="step-btn" data-step="1" aria-label="Plus de passagers">+</button>
+            </div>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-big">
+          <svg class="ic"><use href="#i-search"/></svg> Rechercher un trajet
+        </button>
+      </form>
+
+      <div class="section-head">
+        <h2>Trajets populaires</h2>
+        <button class="link-btn" id="show-all-btn" type="button">Tout voir</button>
+      </div>
+      <div class="chips" id="popular-chips"></div>
+
+      <div class="section-head">
+        <h2 id="results-title">Prochains départs</h2>
+        <span class="results-count" id="results-count"></span>
+      </div>
+      <div id="results" class="results"></div>
+
+      <div class="info-strip">
+        <div class="info-item">
+          <svg class="ic"><use href="#i-money"/></svg>
+          <div><strong>Espèces ou Orange&nbsp;Money</strong><span>Payez comme vous voulez, directement au conducteur.</span></div>
+        </div>
+        <div class="info-item">
+          <svg class="ic"><use href="#i-shield"/></svg>
+          <div><strong>Conducteurs notés</strong><span>Notes et avis des passagers sur chaque trajet.</span></div>
+        </div>
+        <div class="info-item">
+          <svg class="ic"><use href="#i-wa"/></svg>
+          <div><strong>Contact WhatsApp</strong><span>Échangez avec le conducteur avant le départ.</span></div>
+        </div>
+      </div>
+
+      <footer class="app-footer">
+        <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
+        <p>Yaaden est un service de <strong>Digifind</strong><br>Transformation digitale &amp; IA — Guinée</p>
+      </footer>
+    </section>
+
+    <!-- ================= ÉCRAN : PUBLIER ================= -->
+    <section class="screen" id="screen-publish">
+      <div class="page-head">
+        <h1>Publier un trajet</h1>
+        <p>Vous avez des places libres ? Partagez votre trajet et vos frais de route.</p>
+      </div>
+      <form class="form-card" id="publish-form" autocomplete="off">
+        <div class="segmented" role="tablist" aria-label="Type de trajet">
+          <button type="button" class="seg-btn active" data-pub-type="inter" role="tab">Entre villes</button>
+          <button type="button" class="seg-btn" data-pub-type="ville" role="tab">En ville · Conakry</button>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-pin"/></svg> Départ</span>
+            <select id="pub-from" required></select>
+          </label>
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-pin"/></svg> Arrivée</span>
+            <select id="pub-to" required></select>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-cal"/></svg> Date</span>
+            <input type="date" id="pub-date" required>
+          </label>
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-clock"/></svg> Heure de départ</span>
+            <input type="time" id="pub-time" value="08:00" required>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-seat"/></svg> Places disponibles</span>
+            <div class="stepper">
+              <button type="button" class="step-btn" data-pub-step="-1" aria-label="Moins de places">−</button>
+              <span class="step-val" id="pub-seats-val">3</span>
+              <button type="button" class="step-btn" data-pub-step="1" aria-label="Plus de places">+</button>
+            </div>
+          </label>
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-money"/></svg> Prix par place (GNF)</span>
+            <input type="number" id="pub-price" min="10000" step="5000" placeholder="150 000" required>
+          </label>
+        </div>
+        <fieldset class="field">
+          <legend class="field-label">Options à bord</legend>
+          <div class="options">
+            <label class="chip-check"><input type="checkbox" id="opt-clim"><span><svg class="ic"><use href="#i-snow"/></svg> Climatisation</span></label>
+            <label class="chip-check"><input type="checkbox" id="opt-bagages" checked><span><svg class="ic"><use href="#i-bag"/></svg> Bagages acceptés</span></label>
+            <label class="chip-check"><input type="checkbox" id="opt-musique"><span><svg class="ic"><use href="#i-music"/></svg> Musique</span></label>
+          </div>
+        </fieldset>
+        <label class="field">
+          <span class="field-label">Point de rendez-vous</span>
+          <input type="text" id="pub-meeting" placeholder="Ex. : Rond-point de Bambéto, Conakry" maxlength="80">
+        </label>
+        <label class="field">
+          <span class="field-label">Description (facultatif)</span>
+          <textarea id="pub-desc" rows="3" maxlength="280" placeholder="Ex. : Départ ponctuel, pause à Kindia, conduite tranquille…"></textarea>
+        </label>
+        <p class="form-note"><svg class="ic"><use href="#i-money"/></svg> Le paiement se fait en espèces ou via Orange Money, directement avec vos passagers.</p>
+        <button type="submit" class="btn btn-primary btn-big">
+          <svg class="ic"><use href="#i-plus"/></svg> Publier mon trajet
+        </button>
+      </form>
+    </section>
+
+    <!-- ================= ÉCRAN : MES TRAJETS ================= -->
+    <section class="screen" id="screen-trips">
+      <div class="page-head">
+        <h1>Mes trajets</h1>
+        <p>Vos réservations et vos trajets publiés.</p>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="bookings" role="tab" type="button">Réservations <span class="tab-count" id="count-bookings"></span></button>
+        <button class="tab" data-tab="published" role="tab" type="button">Mes trajets publiés <span class="tab-count" id="count-published"></span></button>
+      </div>
+      <div id="my-trips" class="results"></div>
+    </section>
+
+    <!-- ================= ÉCRAN : PROFIL ================= -->
+    <section class="screen" id="screen-profile">
+      <div class="page-head">
+        <h1>Mon profil</h1>
+        <p>Ces informations sont montrées aux passagers quand vous publiez un trajet.</p>
+      </div>
+      <form class="form-card" id="profile-form" autocomplete="off">
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <label class="field">
+          <span class="field-label"><svg class="ic"><use href="#i-user"/></svg> Nom complet</span>
+          <input type="text" id="prof-name" placeholder="Ex. : Mamadou Bah" maxlength="60" required>
+        </label>
+        <label class="field">
+          <span class="field-label"><svg class="ic"><use href="#i-phone"/></svg> Téléphone (WhatsApp)</span>
+          <input type="tel" id="prof-phone" placeholder="Ex. : 620 12 34 56" maxlength="20" required>
+        </label>
+        <label class="field">
+          <span class="field-label"><svg class="ic"><use href="#i-car"/></svg> Véhicule</span>
+          <input type="text" id="prof-car" placeholder="Ex. : Toyota Corolla — grise" maxlength="60">
+        </label>
+        <button type="submit" class="btn btn-primary btn-big">
+          <svg class="ic"><use href="#i-check"/></svg> Enregistrer mon profil
+        </button>
+        <p class="form-note">Vos données restent sur votre téléphone. Aucun compte à créer pour cette première version.</p>
+      </form>
+      <div class="info-strip">
+        <div class="info-item">
+          <svg class="ic"><use href="#i-money"/></svg>
+          <div><strong>Paiement</strong><span>Espèces ou Orange Money, directement entre passager et conducteur. Yaaden ne prend aucune commission pour le moment.</span></div>
+        </div>
+      </div>
+      <footer class="app-footer">
+        <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
+        <p>Yaaden — version 1.0<br>Un service de <strong>Digifind</strong></p>
+      </footer>
+    </section>
+  </main>
+
+  <!-- ====== Navigation basse ====== -->
+  <nav class="bottomnav" aria-label="Navigation principale">
+    <button class="nav-btn active" data-screen="search" type="button">
+      <svg class="ic"><use href="#i-search"/></svg><span>Rechercher</span>
+    </button>
+    <button class="nav-btn nav-cta" data-screen="publish" type="button">
+      <svg class="ic"><use href="#i-plus"/></svg><span>Publier</span>
+    </button>
+    <button class="nav-btn" data-screen="trips" type="button">
+      <svg class="ic"><use href="#i-ticket"/></svg><span>Mes trajets</span><span class="nav-dot" id="trips-dot" hidden></span>
+    </button>
+    <button class="nav-btn" data-screen="profile" type="button">
+      <svg class="ic"><use href="#i-user"/></svg><span>Profil</span>
+    </button>
+  </nav>
+
+  <!-- ====== Fiche trajet (feuille modale) ====== -->
+  <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+  <div class="sheet" id="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" id="detail-close" type="button" aria-label="Fermer"><svg class="ic"><use href="#i-x"/></svg></button>
+    <div class="sheet-body" id="detail-body"></div>
+  </div>
+
+  <!-- ====== Toast ====== -->
+  <div class="toast" id="toast" role="status" hidden></div>
+
+</div>
+</body>
+</html>

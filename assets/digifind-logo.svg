@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" width="760" height="220">
+  <title>Digifind — Transformation digitale &amp; IA</title>
+  <!-- Icône : loupe (find) + étincelle IA -->
+  <circle cx="88" cy="88" r="54" fill="none" stroke="#0E2A47" stroke-width="24"/>
+  <line x1="126" y1="126" x2="170" y2="170" stroke="#00B894" stroke-width="24" stroke-linecap="round"/>
+  <path d="M88 62 L94 82 L114 88 L94 94 L88 114 L82 94 L62 88 L82 82 Z" fill="#00B894"/>
+  <!-- Nom -->
+  <text x="208" y="120" font-family="DejaVu Sans, Arial, sans-serif" font-size="76" font-weight="bold"><tspan fill="#0E2A47">Digi</tspan><tspan fill="#00B894">find</tspan></text>
+  <!-- Slogan -->
+  <text x="210" y="162" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" letter-spacing="4" fill="#5B6B7A">TRANSFORMATION DIGITALE &amp; IA</text>
+</svg>

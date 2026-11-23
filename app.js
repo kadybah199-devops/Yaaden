@@ -64,36 +64,36 @@ const DRIVER_INFO = {
 
 /* Trajets de démo : day = décalage en jours à partir d'aujourd'hui (toujours futurs). */
 const DEMO_TRIPS = [
-  { from:'Conakry', to:'Kindia', day:1, time:'07:30', price:150000, seats:3, driver:'Mamadou Bah', rating:4.9, trips:42, car:'Toyota Corolla — grise', phone:'224622345678', options:['clim','bagages'], meeting:'Rond-point de Bambéto', desc:'Départ ponctuel, pause café à Coyah. Conduite tranquille.' },
-  { from:'Conakry', to:'Kindia', day:1, time:'14:00', price:140000, seats:2, driver:'Fatoumata Diallo', rating:4.8, trips:27, car:'Hyundai i10 — blanche', phone:'224623456789', options:['bagages','musique'], meeting:'Marché Madina, porte 3', desc:'Je rentre à Kindia pour le week-end, 2 places libres.' },
-  { from:'Conakry', to:'Mamou', day:1, time:'06:00', price:250000, seats:4, driver:'Ibrahima Sow', rating:4.7, trips:58, car:'Toyota Prado — noire', phone:'224624567890', options:['clim','bagages','musique'], meeting:'Gare routière de Matoto', desc:'Trajet direct, arrêt à Kindia pour le petit-déjeuner.' },
-  { from:'Conakry', to:'Labé', day:2, time:'06:30', price:350000, seats:3, driver:'Aïcha Camara', rating:5.0, trips:19, car:'Mitsubishi Pajero — bleue', phone:'224625678901', options:['clim','bagages'], meeting:'Carrefour de Kagbélen', desc:'Départ tôt pour arriver avant la nuit. Bagages bienvenus.' },
-  { from:'Conakry', to:'Boké', day:2, time:'08:00', price:200000, seats:2, driver:'Abdoulaye Barry', rating:4.6, trips:33, car:'Toyota Hilux — rouge', phone:'224626789012', options:['bagages'], meeting:'Km 36, station Total', desc:'Je vais à Boké pour le travail, places à l\u2019arrière.' },
-  { from:'Conakry', to:'Kankan', day:3, time:'05:30', price:450000, seats:4, driver:'Ousmane Sylla', rating:4.9, trips:71, car:'Toyota Land Cruiser — blanche', phone:'224627890123', options:['clim','bagages','musique'], meeting:'Gare routière de Matoto', desc:'Grand voyage, départ très tôt. Pause déjeuner à Mamou.' },
-  { from:'Kindia', to:'Conakry', day:1, time:'16:00', price:150000, seats:3, driver:'Mariam Condé', rating:4.8, trips:22, car:'Kia Picanto — rouge', phone:'224628901234', options:['musique','bagages'], meeting:'Centre-ville de Kindia, pharmacie', desc:'Retour à Conakry en fin de journée.' },
-  { from:'Labé', to:'Conakry', day:3, time:'07:00', price:350000, seats:2, driver:'Alpha Diallo', rating:4.7, trips:15, car:'Nissan Patrol — verte', phone:'224629012345', options:['clim','bagages'], meeting:'Gare de Labé', desc:'Descente sur Conakry, 2 places disponibles.' },
-  { from:'Conakry', to:'Nzérékoré', day:4, time:'05:00', price:600000, seats:3, driver:'Sekou Touré', rating:4.9, trips:48, car:'Toyota Prado — grise', phone:'224620123456', options:['clim','bagages','musique'], meeting:'Gare routière de Matoto', desc:'Long trajet vers la Guinée forestière. Départ à l\u2019aube.' },
-  { from:'Conakry', to:'Faranah', day:2, time:'07:00', price:400000, seats:4, driver:'Aminata Touré', rating:4.8, trips:26, car:'Hyundai Tucson — noire', phone:'224621234567', options:['clim','bagages'], meeting:'Rond-point de Bambéto', desc:'Je rends visite à ma famille à Faranah.' },
-  { from:'Conakry', to:'Coyah', day:1, time:'09:00', price:50000, seats:3, driver:'Lamine Keïta', rating:4.5, trips:64, car:'Toyota Yaris — jaune', phone:'224622234567', options:['bagages'], meeting:'Marché Madina', desc:'Petit trajet, je fais l\u2019aller-retour dans la journée.' },
-  { from:'Mamou', to:'Labé', day:2, time:'10:00', price:120000, seats:2, driver:'Nabintou Baldé', rating:4.9, trips:12, car:'Suzuki Swift — bleue', phone:'224623234567', options:['musique'], meeting:'Gare de Mamou', desc:'Trajet entre les deux villes du Fouta.' },
-  { from:'Kankan', to:'Siguiri', day:3, time:'08:30', price:120000, seats:3, driver:'Moussa Konaté', rating:4.6, trips:29, car:'Toyota Corolla — blanche', phone:'224624234567', options:['bagages','musique'], meeting:'Centre-ville de Kankan', desc:'Direction Siguiri, arrêt possible à Bouré.' },
-  { from:'Conakry', to:'Dubréka', day:1, time:'11:00', price:60000, seats:2, driver:'Fodé Camara', rating:4.7, trips:18, car:'Renault Duster — grise', phone:'224625234567', options:['bagages'], meeting:'Km 36', desc:'Je monte à Dubréka, 2 places libres.' },
+  { from:'Conakry', to:'Kindia', day:1, time:'07:30', price:120000, seats:3, driver:'Mamadou Bah', rating:4.9, trips:42, car:'Toyota Corolla — grise', phone:'224622345678', options:['clim','bagages'], meeting:'Rond-point de Bambéto', desc:'Départ ponctuel, pause café à Coyah. Conduite tranquille.' },
+  { from:'Conakry', to:'Kindia', day:1, time:'14:00', price:120000, seats:2, driver:'Fatoumata Diallo', rating:4.8, trips:27, car:'Hyundai i10 — blanche', phone:'224623456789', options:['bagages','musique'], meeting:'Marché Madina, porte 3', desc:'Je rentre à Kindia pour le week-end, 2 places libres.' },
+  { from:'Conakry', to:'Mamou', day:1, time:'06:00', price:220000, seats:4, driver:'Ibrahima Sow', rating:4.7, trips:58, car:'Toyota Prado — noire', phone:'224624567890', options:['clim','bagages','musique'], meeting:'Gare routière de Matoto', desc:'Trajet direct, arrêt à Kindia pour le petit-déjeuner.' },
+  { from:'Conakry', to:'Labé', day:2, time:'06:30', price:300000, seats:3, driver:'Aïcha Camara', rating:5.0, trips:19, car:'Mitsubishi Pajero — bleue', phone:'224625678901', options:['clim','bagages'], meeting:'Carrefour de Kagbélen', desc:'Départ tôt pour arriver avant la nuit. Bagages bienvenus.' },
+  { from:'Conakry', to:'Boké', day:2, time:'08:00', price:180000, seats:2, driver:'Abdoulaye Barry', rating:4.6, trips:33, car:'Toyota Hilux — rouge', phone:'224626789012', options:['bagages'], meeting:'Km 36, station Total', desc:'Je vais à Boké pour le travail, places à l\u2019arrière.' },
+  { from:'Conakry', to:'Kankan', day:3, time:'05:30', price:400000, seats:4, driver:'Ousmane Sylla', rating:4.9, trips:71, car:'Toyota Land Cruiser — blanche', phone:'224627890123', options:['clim','bagages','musique'], meeting:'Gare routière de Matoto', desc:'Grand voyage, départ très tôt. Pause déjeuner à Mamou.' },
+  { from:'Kindia', to:'Conakry', day:1, time:'16:00', price:120000, seats:3, driver:'Mariam Condé', rating:4.8, trips:22, car:'Kia Picanto — rouge', phone:'224628901234', options:['musique','bagages'], meeting:'Centre-ville de Kindia, pharmacie', desc:'Retour à Conakry en fin de journée.' },
+  { from:'Labé', to:'Conakry', day:3, time:'07:00', price:300000, seats:2, driver:'Alpha Diallo', rating:4.7, trips:15, car:'Nissan Patrol — verte', phone:'224629012345', options:['clim','bagages'], meeting:'Gare de Labé', desc:'Descente sur Conakry, 2 places disponibles.' },
+  { from:'Conakry', to:'Nzérékoré', day:4, time:'05:00', price:500000, seats:3, driver:'Sekou Touré', rating:4.9, trips:48, car:'Toyota Prado — grise', phone:'224620123456', options:['clim','bagages','musique'], meeting:'Gare routière de Matoto', desc:'Long trajet vers la Guinée forestière. Départ à l\u2019aube.' },
+  { from:'Conakry', to:'Faranah', day:2, time:'07:00', price:350000, seats:4, driver:'Aminata Touré', rating:4.8, trips:26, car:'Hyundai Tucson — noire', phone:'224621234567', options:['clim','bagages'], meeting:'Rond-point de Bambéto', desc:'Je rends visite à ma famille à Faranah.' },
+  { from:'Conakry', to:'Coyah', day:1, time:'09:00', price:40000, seats:3, driver:'Lamine Keïta', rating:4.5, trips:64, car:'Toyota Yaris — jaune', phone:'224622234567', options:['bagages'], meeting:'Marché Madina', desc:'Petit trajet, je fais l\u2019aller-retour dans la journée.' },
+  { from:'Mamou', to:'Labé', day:2, time:'10:00', price:100000, seats:2, driver:'Nabintou Baldé', rating:4.9, trips:12, car:'Suzuki Swift — bleue', phone:'224623234567', options:['musique'], meeting:'Gare de Mamou', desc:'Trajet entre les deux villes du Fouta.' },
+  { from:'Kankan', to:'Siguiri', day:3, time:'08:30', price:100000, seats:3, driver:'Moussa Konaté', rating:4.6, trips:29, car:'Toyota Corolla — blanche', phone:'224624234567', options:['bagages','musique'], meeting:'Centre-ville de Kankan', desc:'Direction Siguiri, arrêt possible à Bouré.' },
+  { from:'Conakry', to:'Dubréka', day:1, time:'11:00', price:50000, seats:2, driver:'Fodé Camara', rating:4.7, trips:18, car:'Renault Duster — grise', phone:'224625234567', options:['bagages'], meeting:'Km 36', desc:'Je monte à Dubréka, 2 places libres.' },
 ];
 
-/* Trajets de démo EN VILLE à Conakry : petits prix (20 000 – 60 000 GNF). */
+/* Trajets de démo EN VILLE à Conakry : 10 000 – 25 000 GNF, comme le taxi en commun. */
 const DEMO_CITY_TRIPS = [
-  { from:'Kipé', to:'Kaloum', day:1, time:'07:00', price:40000, seats:3, driver:'Thierno Diallo', rating:4.9, trips:86, car:'Toyota Corolla — blanche', phone:'224622112233', options:['clim','musique'], meeting:'Kipé, station Shell', desc:'Trajet du matin vers le centre-ville, tous les jours ouvrés.' },
-  { from:'Bambéto', to:'Matoto', day:1, time:'07:30', price:30000, seats:2, driver:'Kadiatou Barry', rating:4.8, trips:41, car:'Kia Picanto — bleue', phone:'224623112233', options:['musique'], meeting:'Rond-point de Bambéto', desc:'Je descends à Matoto pour le travail, départ à l\u2019heure.' },
-  { from:'Cosa', to:'Kaloum', day:1, time:'06:45', price:45000, seats:3, driver:'Mamadou Yéro Bah', rating:4.7, trips:63, car:'Hyundai i20 — grise', phone:'224624112233', options:['clim','bagages'], meeting:'Cosa, carrefour principal', desc:'Départ tôt pour éviter les embouteillages.' },
-  { from:'Hamdallaye', to:'Dixinn', day:1, time:'08:00', price:25000, seats:4, driver:'Aïssatou Sow', rating:4.9, trips:35, car:'Toyota Yaris — rouge', phone:'224625112233', options:['musique','bagages'], meeting:'Hamdallaye, marché', desc:'Petit trajet vers Dixinn, 4 places.' },
-  { from:'Lambanyi', to:'Matam', day:1, time:'07:15', price:35000, seats:2, driver:'Ibrahima Kalil Camara', rating:4.6, trips:24, car:'Nissan Micra — noire', phone:'224626112233', options:['clim'], meeting:'Lambanyi, mosquée', desc:'Direction Matam le matin, retour le soir.' },
-  { from:'Nongo', to:'Kipé', day:1, time:'17:30', price:25000, seats:3, driver:'Fatoumata Binta Diallo', rating:4.8, trips:29, car:'Suzuki Swift — blanche', phone:'224627112233', options:['musique'], meeting:'Nongo, cité', desc:'Retour du soir vers Kipé.' },
-  { from:'Sonfonia', to:'Kaloum', day:2, time:'07:00', price:50000, seats:3, driver:'Abdoul Karim Sylla', rating:4.9, trips:52, car:'Toyota Prado — noire', phone:'224628112233', options:['clim','bagages','musique'], meeting:'Sonfonia, gare', desc:'Grand trajet du matin, climatisé.' },
-  { from:'Kagbélen', to:'Ratoma', day:2, time:'08:30', price:30000, seats:2, driver:'Mariam Kaba', rating:4.7, trips:17, car:'Kia Rio — grise', phone:'224629112233', options:['bagages'], meeting:'Kagbélen, carrefour', desc:'Je vais à Ratoma, 2 places libres.' },
-  { from:'Taouyah', to:'Kaloum', day:2, time:'07:45', price:35000, seats:3, driver:'Oumar Bangoura', rating:4.8, trips:38, car:'Toyota Corolla — bleue', phone:'224620112233', options:['clim','musique'], meeting:'Taouyah, corniche', desc:'Descente vers Kaloum par la corniche.' },
-  { from:'Kaporo', to:'Matoto', day:1, time:'16:30', price:40000, seats:2, driver:'Saran Condé', rating:4.9, trips:21, car:'Hyundai Tucson — blanche', phone:'224621112233', options:['clim','bagages'], meeting:'Kaporo Rails', desc:'Trajet de l\u2019après-midi vers Matoto.' },
-  { from:'Kaloum', to:'Kipé', day:1, time:'18:00', price:40000, seats:3, driver:'Thierno Diallo', rating:4.9, trips:86, car:'Toyota Corolla — blanche', phone:'224622112233', options:['clim','musique'], meeting:'Kaloum, port', desc:'Retour du soir vers Kipé.' },
-  { from:'Enco 5', to:'Madina', day:2, time:'09:00', price:20000, seats:4, driver:'Lamine Touré', rating:4.5, trips:47, car:'Toyota Starlet — jaune', phone:'224622223344', options:['bagages'], meeting:'Enco 5, marché', desc:'Petit trajet vers le marché Madina.' },
+  { from:'Kipé', to:'Kaloum', day:1, time:'07:00', price:20000, seats:3, driver:'Thierno Diallo', rating:4.9, trips:86, car:'Toyota Corolla — blanche', phone:'224622112233', options:['clim','musique'], meeting:'Kipé, station Shell', desc:'Trajet du matin vers le centre-ville, tous les jours ouvrés.' },
+  { from:'Bambéto', to:'Matoto', day:1, time:'07:30', price:15000, seats:2, driver:'Kadiatou Barry', rating:4.8, trips:41, car:'Kia Picanto — bleue', phone:'224623112233', options:['musique'], meeting:'Rond-point de Bambéto', desc:'Je descends à Matoto pour le travail, départ à l\u2019heure.' },
+  { from:'Cosa', to:'Kaloum', day:1, time:'06:45', price:20000, seats:3, driver:'Mamadou Yéro Bah', rating:4.7, trips:63, car:'Hyundai i20 — grise', phone:'224624112233', options:['clim','bagages'], meeting:'Cosa, carrefour principal', desc:'Départ tôt pour éviter les embouteillages.' },
+  { from:'Hamdallaye', to:'Dixinn', day:1, time:'08:00', price:10000, seats:4, driver:'Aïssatou Sow', rating:4.9, trips:35, car:'Toyota Yaris — rouge', phone:'224625112233', options:['musique','bagages'], meeting:'Hamdallaye, marché', desc:'Petit trajet vers Dixinn, 4 places.' },
+  { from:'Lambanyi', to:'Matam', day:1, time:'07:15', price:15000, seats:2, driver:'Ibrahima Kalil Camara', rating:4.6, trips:24, car:'Nissan Micra — noire', phone:'224626112233', options:['clim'], meeting:'Lambanyi, mosquée', desc:'Direction Matam le matin, retour le soir.' },
+  { from:'Nongo', to:'Kipé', day:1, time:'17:30', price:10000, seats:3, driver:'Fatoumata Binta Diallo', rating:4.8, trips:29, car:'Suzuki Swift — blanche', phone:'224627112233', options:['musique'], meeting:'Nongo, cité', desc:'Retour du soir vers Kipé.' },
+  { from:'Sonfonia', to:'Kaloum', day:2, time:'07:00', price:25000, seats:3, driver:'Abdoul Karim Sylla', rating:4.9, trips:52, car:'Toyota Prado — noire', phone:'224628112233', options:['clim','bagages','musique'], meeting:'Sonfonia, gare', desc:'Grand trajet du matin, climatisé.' },
+  { from:'Kagbélen', to:'Ratoma', day:2, time:'08:30', price:15000, seats:2, driver:'Mariam Kaba', rating:4.7, trips:17, car:'Kia Rio — grise', phone:'224629112233', options:['bagages'], meeting:'Kagbélen, carrefour', desc:'Je vais à Ratoma, 2 places libres.' },
+  { from:'Taouyah', to:'Kaloum', day:2, time:'07:45', price:15000, seats:3, driver:'Oumar Bangoura', rating:4.8, trips:38, car:'Toyota Corolla — bleue', phone:'224620112233', options:['clim','musique'], meeting:'Taouyah, corniche', desc:'Descente vers Kaloum par la corniche.' },
+  { from:'Kaporo', to:'Matoto', day:1, time:'16:30', price:20000, seats:2, driver:'Saran Condé', rating:4.9, trips:21, car:'Hyundai Tucson — blanche', phone:'224621112233', options:['clim','bagages'], meeting:'Kaporo Rails', desc:'Trajet de l\u2019après-midi vers Matoto.' },
+  { from:'Kaloum', to:'Kipé', day:1, time:'18:00', price:20000, seats:3, driver:'Thierno Diallo', rating:4.9, trips:86, car:'Toyota Corolla — blanche', phone:'224622112233', options:['clim','musique'], meeting:'Kaloum, port', desc:'Retour du soir vers Kipé.' },
+  { from:'Enco 5', to:'Madina', day:2, time:'09:00', price:10000, seats:4, driver:'Lamine Touré', rating:4.5, trips:47, car:'Toyota Starlet — jaune', phone:'224622223344', options:['bagages'], meeting:'Enco 5, marché', desc:'Petit trajet vers le marché Madina.' },
 ];
 
 const OPTION_LABELS = { clim:'Climatisation', bagages:'Bagages acceptés', musique:'Musique' };
@@ -105,8 +105,8 @@ let bookings = loadJSON(LS_BOOKINGS, []);
 let profile = loadJSON(LS_PROFILE, null);
 let passengers = 1;
 let pubSeats = 3;
-let searchType = 'inter'; /* 'inter' = entre villes, 'ville' = en ville à Conakry */
-let pubType = 'inter';
+let searchType = 'ville'; /* 'ville' = en ville à Conakry (priorité), 'inter' = entre villes */
+let pubType = 'ville';
 let currentTab = 'bookings';
 let currentDetailId = null;
 let detailSeats = 1;
@@ -435,17 +435,17 @@ function renderPopularChips() {
     'linear-gradient(135deg,#0B5E4B,#14324D)'
   ];
   const popular = searchType === 'ville' ? [
-    { from:'Kipé', to:'Kaloum', price:40000 },
-    { from:'Bambéto', to:'Matoto', price:30000 },
-    { from:'Cosa', to:'Kaloum', price:45000 },
-    { from:'Hamdallaye', to:'Dixinn', price:25000 },
-    { from:'Sonfonia', to:'Kaloum', price:50000 },
+    { from:'Kipé', to:'Kaloum', price:20000 },
+    { from:'Bambéto', to:'Matoto', price:15000 },
+    { from:'Cosa', to:'Kaloum', price:20000 },
+    { from:'Hamdallaye', to:'Dixinn', price:10000 },
+    { from:'Sonfonia', to:'Kaloum', price:25000 },
   ] : [
-    { from:'Conakry', to:'Kindia', price:150000 },
-    { from:'Conakry', to:'Labé', price:350000 },
-    { from:'Conakry', to:'Mamou', price:250000 },
-    { from:'Conakry', to:'Kankan', price:450000 },
-    { from:'Conakry', to:'Boké', price:200000 },
+    { from:'Conakry', to:'Kindia', price:120000 },
+    { from:'Conakry', to:'Labé', price:300000 },
+    { from:'Conakry', to:'Mamou', price:220000 },
+    { from:'Conakry', to:'Kankan', price:400000 },
+    { from:'Conakry', to:'Boké', price:180000 },
   ];
   document.getElementById('popular-chips').innerHTML = popular.map(function (p, i) {
     return '<button type="button" class="chip pop-card" style="background:' + gradients[i % gradients.length] + '" data-from="' + p.from + '" data-to="' + p.to + '">' +
@@ -478,11 +478,11 @@ function setPubType(type) {
   if (type === 'ville') {
     fillCitySelect(document.getElementById('pub-from'), 'Kipé', CONAKRY_PLACES);
     fillCitySelect(document.getElementById('pub-to'), 'Kaloum', CONAKRY_PLACES);
-    document.getElementById('pub-price').placeholder = '40 000';
+    document.getElementById('pub-price').placeholder = '15 000';
   } else {
     fillCitySelect(document.getElementById('pub-from'), 'Conakry', CITIES);
     fillCitySelect(document.getElementById('pub-to'), 'Kindia', CITIES);
-    document.getElementById('pub-price').placeholder = '150 000';
+    document.getElementById('pub-price').placeholder = '120 000';
   }
 }
 
@@ -640,7 +640,7 @@ const YAA_KB = [
   { keys:['publier','publie','proposer un trajet','offrir une place','jai une voiture','j ai une voiture'], answer:'Pour publier un trajet : touchez « Publier » en bas de l\u2019écran, choisissez Entre villes ou En ville, puis indiquez départ, arrivée, date, heure, places et prix. C\u2019est gratuit et vos passagers vous paient directement.' },
   { keys:['payer','paiement','paye','orange money','especes','cash','argent'], answer:'Le paiement se fait directement avec le conducteur, au moment du trajet : en espèces ou via Orange Money. Yaaden ne prend aucune commission pour le moment.' },
   { keys:['annuler','annulation','supprimer ma reservation','supprimer reservation'], answer:'Pour annuler : allez dans « Mes trajets », puis touchez « Annuler » à côté de votre réservation. Pensez à prévenir le conducteur sur WhatsApp.' },
-  { keys:['prix','tarif','cout','combien','cher'], answer:'Les prix sont fixés par les conducteurs. En ville à Conakry : 20 000 à 60 000 GNF par place. Entre villes, par exemple Conakry → Kindia dès 140 000 GNF.' },
+  { keys:['prix','tarif','cout','combien','cher'], answer:'En ville à Conakry : 10 000 à 25 000 GNF par place, comme le taxi en commun — mais sans la longue attente au bord de la route. Entre villes, par exemple Conakry → Kindia dès 120 000 GNF.' },
   { keys:['en ville','conakry','quartier','heures de pointe','pointe','kipe','bambeto','kaloum','cosa','matoto','ratoma'], answer:'Oui, Yaaden couvre aussi Conakry ! Choisissez « En ville · Conakry » dans la recherche pour trouver des places entre quartiers : Kipé, Cosa, Bambéto, Kaloum… C\u2019est idéal aux heures de pointe, de 7h à 9h et de 17h à 19h.' },
   { keys:['entre villes','long trajet','voyage','kindia','labe','kankan','mamou','boke','voyager'], answer:'Pour les longs trajets, choisissez « Entre villes » : Conakry → Kindia, Labé, Kankan, Mamou, Boké et plus. Les conducteurs partent avec des places libres — réservez la vôtre.' },
   { keys:['contacter','joindre','parler au conducteur','numero','telephone conducteur','whatsapp conducteur'], answer:'Pour joindre un conducteur : ouvrez la fiche de son trajet et touchez le bouton WhatsApp. Vous pouvez lui écrire avant même de réserver.' },
@@ -817,10 +817,10 @@ let __initDone = false;
 function init() {
   if (__initDone) return; /* ne jamais brancher les écouteurs deux fois */
   __initDone = true;
-  fillCitySelect(document.getElementById('from'), 'Conakry', CITIES);
-  fillCitySelect(document.getElementById('to'), 'Kindia', CITIES);
-  fillCitySelect(document.getElementById('pub-from'), 'Conakry', CITIES);
-  fillCitySelect(document.getElementById('pub-to'), 'Kindia', CITIES);
+  fillCitySelect(document.getElementById('from'), 'Kipé', CONAKRY_PLACES);
+  fillCitySelect(document.getElementById('to'), 'Kaloum', CONAKRY_PLACES);
+  fillCitySelect(document.getElementById('pub-from'), 'Kipé', CONAKRY_PLACES);
+  fillCitySelect(document.getElementById('pub-to'), 'Kaloum', CONAKRY_PLACES);
   document.getElementById('date').value = dateFromOffset(1);
   document.getElementById('date').min = dateFromOffset(0);
   document.getElementById('pub-date').value = dateFromOffset(1);

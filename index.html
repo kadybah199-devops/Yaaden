@@ -101,21 +101,20 @@
       <div class="hero">
         <span class="hero-eyebrow"><span class="live-dot"></span> Heures de pointe</span>
         <h1>Trouvez <span class="hl">votre place.</span></h1>
-        <p>Des conducteurs vont déjà dans votre direction.</p>
-        <span class="sticker sticker-a">Moins cher<br>qu'un taxi</span>
+        <p>Une voiture près de vous, sans longue attente.</p>
+        <span class="sticker sticker-a">Sans longue<br>attente</span>
         <div class="hero-road" aria-hidden="true"><span class="road-car"><svg class="ic"><use href="#i-car"/></svg></span></div>
         <div class="hero-stats">
           <span><b>26</b> trajets cette semaine</span>
-          <span><b>11</b> villes</span>
-          <span><b>dès 20 000 GNF</b> en ville</span>
+          <span><b>dès 10 000 GNF</b> en ville</span>
         </div>
       </div>
 
       <form class="search-card" id="search-form" autocomplete="off">
         <span class="sticker sticker-b">En ville &amp;<br>entre villes</span>
         <div class="segmented" role="tablist" aria-label="Type de trajet">
-          <button type="button" class="seg-btn active" data-search-type="inter" role="tab">Entre villes</button>
-          <button type="button" class="seg-btn" data-search-type="ville" role="tab">En ville · Conakry</button>
+          <button type="button" class="seg-btn active" data-search-type="ville" role="tab">En ville · Conakry</button>
+          <button type="button" class="seg-btn" data-search-type="inter" role="tab">Entre villes</button>
         </div>
         <label class="field">
           <span class="field-label"><svg class="ic"><use href="#i-pin"/></svg> Départ</span>
@@ -151,27 +150,10 @@
         </div>
       </form>
 
-      <div class="marquee" aria-hidden="true">
-        <div class="marquee-track">
-          <span>Heures de pointe 7h–9h &amp; 17h–19h ✦ Kipé → Kaloum · 40 000 GNF ✦ Conakry → Kindia · 140 000 GNF ✦ Bambéto → Matoto · 30 000 GNF ✦ Conakry → Labé · 350 000 GNF ✦ Cosa → Kaloum · 45 000 GNF ✦ Conakry → Mamou · 250 000 GNF ✦&nbsp;</span>
-          <span>Heures de pointe 7h–9h &amp; 17h–19h ✦ Kipé → Kaloum · 40 000 GNF ✦ Conakry → Kindia · 140 000 GNF ✦ Bambéto → Matoto · 30 000 GNF ✦ Conakry → Labé · 350 000 GNF ✦ Cosa → Kaloum · 45 000 GNF ✦ Conakry → Mamou · 250 000 GNF ✦&nbsp;</span>
-        </div>
-      </div>
-
-      <div class="section-head">
-        <h2>Comment ça marche ?</h2>
-      </div>
-      <div class="steps">
-        <div class="step"><span class="step-num">1</span><svg class="ic"><use href="#i-search"/></svg><strong>Cherchez</strong></div>
-        <div class="step"><span class="step-num">2</span><svg class="ic"><use href="#i-ticket"/></svg><strong>Réservez</strong></div>
-        <div class="step"><span class="step-num">3</span><svg class="ic"><use href="#i-money"/></svg><strong>Payez</strong></div>
-      </div>
-
       <div class="why">
-        <h2>Pourquoi Yaaden ?</h2>
-                <div class="why-points">
+        <div class="why-points">
           <span><svg class="ic"><use href="#i-clock"/></svg> Moins d'attente aux heures de pointe</span>
-          <span><svg class="ic"><use href="#i-money"/></svg> Moins cher qu'un taxi seul</span>
+          <span><svg class="ic"><use href="#i-money"/></svg> Même prix que le taxi en commun</span>
           <span><svg class="ic"><use href="#i-seat"/></svg> Des voisins qui vont au même endroit</span>
         </div>
       </div>
@@ -195,21 +177,6 @@
       </div>
       <div id="results" class="results"></div>
 
-      <div class="info-strip">
-        <div class="info-item">
-          <svg class="ic"><use href="#i-money"/></svg>
-          <div><strong>Espèces ou Orange Money</strong></div>
-        </div>
-        <div class="info-item">
-          <svg class="ic"><use href="#i-shield"/></svg>
-          <div><strong>Conducteurs vérifiés</strong></div>
-        </div>
-        <div class="info-item">
-          <svg class="ic"><use href="#i-wa"/></svg>
-          <div><strong>Contact WhatsApp</strong></div>
-        </div>
-      </div>
-
       <footer class="app-footer">
         <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
         <p>Yaaden · Un service de <strong>Digifind</strong><br><span class="photo-credit">Photo : rond-point de Conakry (Financial Afrik)</span></p>
@@ -224,8 +191,8 @@
       </div>
       <form class="form-card" id="publish-form" autocomplete="off">
         <div class="segmented" role="tablist" aria-label="Type de trajet">
-          <button type="button" class="seg-btn active" data-pub-type="inter" role="tab">Entre villes</button>
-          <button type="button" class="seg-btn" data-pub-type="ville" role="tab">En ville · Conakry</button>
+          <button type="button" class="seg-btn active" data-pub-type="ville" role="tab">En ville · Conakry</button>
+          <button type="button" class="seg-btn" data-pub-type="inter" role="tab">Entre villes</button>
         </div>
         <div class="field-row">
           <label class="field">
@@ -258,7 +225,7 @@
           </label>
           <label class="field">
             <span class="field-label"><svg class="ic"><use href="#i-money"/></svg> Prix par place (GNF)</span>
-            <input type="number" id="pub-price" min="10000" step="5000" placeholder="150 000" required>
+            <input type="number" id="pub-price" min="10000" step="5000" placeholder="15 000" required>
           </label>
         </div>
         <fieldset class="field">
@@ -354,7 +321,7 @@
       </div>
       <footer class="app-footer">
         <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
-        <p>Yaaden — version 5.0<br>Un service de <strong>Digifind</strong></p>
+        <p>Yaaden — version 6.0<br>Un service de <strong>Digifind</strong></p>
       </footer>
     </section>
   </main>

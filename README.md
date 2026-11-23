@@ -19,6 +19,20 @@ Un service de **Digifind** — transformation digitale & IA.
 - **Paiement** : espèces ou Orange Money, directement entre passager et conducteur.
 - **PWA installable** : manifest + service worker, fonctionne hors connexion après la première visite.
 
+## Nouveautés (v6 — tarifs bas, priorité ville, écran aéré)
+
+- **Tarifs baissés** : en ville à Conakry, 10 000 – 25 000 GNF par place
+  (référence : le taxi en commun coûte environ 15 000 GNF). Entre villes,
+  baisse modérée aussi (Conakry → Kindia dès 120 000 GNF). La valeur ajoutée
+  affichée n'est plus le prix mais l'attente : même prix que le taxi en
+  commun, sans la longue attente au bord de la route.
+- **Priorité aux trajets en ville** : l'application s'ouvre sur « En ville ·
+  Conakry » (recherche et publication), le hero parle de l'attente
+  (« Une voiture près de vous, sans longue attente »).
+- **Écran aéré** : bandeau défilant, section « Comment ça marche ? » et
+  bandeau d'infos retirés de l'accueil ; « Pourquoi Yaaden ? » devient une
+  simple ligne de 3 points sans carte ni titre ; 2 chiffres clés au lieu de 3.
+
 ## Nouveautés (v5 — proximité, arrivée, confiance)
 
 - **« Voitures près de moi »** : le bouton de l'accueil demande la position du

@@ -346,16 +346,11 @@ fieldset.field{border:none;padding:0}
 }
 
 /* ---------- Pourquoi Yaaden ---------- */
-.why{
-  margin-top:24px;padding:20px;border-radius:24px;
-  background:var(--mint-soft);
-  border:var(--border);box-shadow:var(--shadow-hard);
-}
-.why h2{margin:0 0 8px;font-size:1.3rem;font-weight:700;color:var(--text)}
-.why p{margin:0 0 14px;font-size:.92rem;font-weight:700;line-height:1.55;color:#BFE9D4}
-.why-points{display:flex;flex-direction:column;gap:9px}
+/* v6 : une simple ligne aérée, sans carte ni titre */
+.why{margin:20px 4px 0;padding:0;background:none;border:none;box-shadow:none}
+.why-points{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px 18px}
 .why-points span{
-  display:flex;align-items:center;gap:9px;font-size:.9rem;font-weight:900;color:var(--text);
+  display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:900;color:var(--text);
 }
 .why-points .ic{width:21px;height:21px;color:var(--mint);flex:none}
 

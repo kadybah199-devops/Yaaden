@@ -19,6 +19,18 @@ Un service de **Digifind** — transformation digitale & IA.
 - **Paiement** : espèces ou Orange Money, directement entre passager et conducteur.
 - **PWA installable** : manifest + service worker, fonctionne hors connexion après la première visite.
 
+## Nouveautés (v3 — « Ticket tropical »)
+
+- **Identité visuelle qui sort du lot** : fond crème chaud, polices arrondies
+  (Fredoka + Nunito), cartes façon autocollant (bordure encre + ombre franche),
+  cartes trajets en **ticket perforé** avec encoches latérales, badges autocollants
+  inclinés, navigation basse en pilule flottante avec bouton Publier surélevé.
+- **Vraie photo de Conakry** dans le hero (rond-point avec taxis jaunes, Financial
+  Afrik) sous un voile bleu Digifind — avec dégradé de secours si la photo ne charge
+  pas. La photo est à remplacer par une photo maison pour la version finale.
+- **Bandeau défilant** des prix des trajets populaires, et carrousel de cartes
+  dégradées pour les trajets populaires.
+
 ## Nouveautés (v2)
 
 - **Design refondu** : hero qui parle du vrai problème (attente aux heures de pointe),

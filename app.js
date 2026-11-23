@@ -158,7 +158,7 @@ function tripCardHTML(trip) {
     '<div class="trip-top">' +
       '<div><div class="trip-route">' + esc(trip.from) + ' <span class="arrow">→</span> ' + esc(trip.to) + '</div>' +
       '<div class="route-visual" aria-hidden="true"><span class="rv-dot"></span><span class="rv-line"></span><span class="rv-dot end"></span></div>' +
-      '<div class="trip-date"><svg class="ic"><use href="#i-cal"/></svg>' + esc(prettyDate(trip.date)) +
+      '<div class="trip-date"><svg class="ic"><use href="#i-cal"/></svg>' + esc(shortDate(trip.date)) +
       ' · <svg class="ic"><use href="#i-clock"/></svg>' + esc(trip.time) + '</div></div>' +
       '<div class="trip-price"><b>' + esc(fmtGNF(trip.price)) + '</b><span>par place</span></div>' +
     '</div>' +
@@ -172,6 +172,7 @@ function tripCardHTML(trip) {
       (trip.mine ? '<span class="pill"><svg class="ic"><use href="#i-car"/></svg>Mon trajet</span>' : '') +
       optionPills(trip) +
     '</div>' +
+    '<div class="ticket-perfo" aria-hidden="true"></div>' +
     '<div class="trip-driver">' + avatarHTML(trip.driver) +
       '<div class="driver-info"><div class="driver-name">' + esc(trip.driver) + '</div>' +
       '<div class="driver-sub"><svg class="ic"><use href="#i-star"/></svg>' + trip.rating.toFixed(1) +
@@ -230,6 +231,13 @@ function showAll() {
   renderResults(upcomingTrips(searchType), typeTitle(searchType));
 }
 function renderPopularChips() {
+  const gradients = [
+    'linear-gradient(135deg,#0E2A47,#0B5E4B)',
+    'linear-gradient(135deg,#FF6B1A,#C2410C)',
+    'linear-gradient(135deg,#00967A,#0B5E4B)',
+    'linear-gradient(135deg,#12395E,#0E2A47)',
+    'linear-gradient(135deg,#E85D04,#9A3412)'
+  ];
   const popular = searchType === 'ville' ? [
     { from:'Kipé', to:'Kaloum', price:40000 },
     { from:'Bambéto', to:'Matoto', price:30000 },
@@ -243,9 +251,10 @@ function renderPopularChips() {
     { from:'Conakry', to:'Kankan', price:450000 },
     { from:'Conakry', to:'Boké', price:200000 },
   ];
-  document.getElementById('popular-chips').innerHTML = popular.map(function (p) {
-    return '<button type="button" class="chip" data-from="' + p.from + '" data-to="' + p.to + '">' +
-      p.from + ' → ' + p.to + ' · <b>dès ' + fmtGNF(p.price) + '</b></button>';
+  document.getElementById('popular-chips').innerHTML = popular.map(function (p, i) {
+    return '<button type="button" class="chip pop-card" style="background:' + gradients[i % gradients.length] + '" data-from="' + p.from + '" data-to="' + p.to + '">' +
+      '<span class="pop-route">' + p.from + ' → ' + p.to + '</span>' +
+      '<span class="pop-price">dès ' + fmtGNF(p.price) + '</span></button>';
   }).join('');
 }
 /* Bascule Entre villes / En ville : change les listes de lieux + les résultats. */

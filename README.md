@@ -19,6 +19,28 @@ Un service de **Digifind** — transformation digitale & IA.
 - **Paiement** : espèces ou Orange Money, directement entre passager et conducteur.
 - **PWA installable** : manifest + service worker, fonctionne hors connexion après la première visite.
 
+## Nouveautés (v5 — proximité, arrivée, confiance)
+
+- **« Voitures près de moi »** : le bouton de l'accueil demande la position du
+  téléphone (géolocalisation du navigateur) et montre les départs proches
+  (10 km en ville, 50 km entre villes), triés par distance, avec un badge
+  « Départ à 1,2 km » sur chaque carte et un bandeau « X voitures près de
+  vous ». La position n'est jamais enregistrée. Coordonnées approximatives des
+  villes et quartiers dans `PLACE_COORDS` (app.js).
+- **Alerte d'arrivée** : sur un trajet publié, le conducteur touche « J'arrive »
+  puis « Je suis arrivé » ; le passager le voit dans « Mes trajets » et sur la
+  fiche du trajet, et le conducteur peut prévenir ses passagers sur WhatsApp
+  (message pré-rempli). Dans cette version sans serveur, le signal est stocké
+  sur le téléphone (localStorage) : le suivi en temps réel entre deux
+  téléphones demandera un serveur plus tard.
+- **Vérification conducteurs** : badge « Vérifié » (pièce d'identité + permis
+  contrôlés) sur les cartes et la fiche, filtre « Conducteurs vérifiés » dans
+  la recherche, plaque d'immatriculation affichée. Dans le profil, le
+  conducteur envoie sa plaque, la photo de sa pièce d'identité et un selfie
+  (réduits et gardés sur le téléphone) puis les transmet à l'équipe Yaaden sur
+  WhatsApp pour contrôle sous 24 h — pas de vérification automatique sans
+  serveur.
+
 ## Nouveautés (v4 — « Nuit Conakry »)
 
 - **Thème sombre choisi par Shahid** (après le retour « trop d'écriture, je n'aime

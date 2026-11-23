@@ -11,10 +11,56 @@ const LS_BOOKINGS = 'yaaden_bookings_v1';
 const LS_PROFILE = 'yaaden_profile_v1';
 const LS_CHAT = 'yaaden_chat_v1';
 const LS_CHAT_SEEN = 'yaaden_chat_seen_v1';
+const LS_STATUS = 'yaaden_trip_status_v1';
+const LS_VERIFY = 'yaaden_verification_v1';
 /* WhatsApp d'assistance Yaaden (équipe Digifind à Conakry). */
 const SUPPORT_WA = '224620685645';
 const SUPPORT_WA_MSG = 'Bonjour, j\u2019ai besoin d\u2019aide sur Yaaden.';
 const AVATAR_COLORS = ['#00B894','#3DDC97','#4D9DE0','#8B7CF6','#E86AA8','#2BB3A3','#1B6FA8','#5B4DBC'];
+/* Coordonnées approximatives des lieux de départ — pour « Près de moi ». */
+const PLACE_COORDS = {
+  'Conakry':[9.51,-13.71], 'Kindia':[10.06,-12.85], 'Mamou':[10.38,-12.09],
+  'Labé':[11.32,-12.28], 'Kankan':[10.38,-9.31], 'Nzérékoré':[7.75,-8.82],
+  'Boké':[10.94,-14.30], 'Faranah':[10.04,-13.57], 'Siguiri':[9.51,-9.17],
+  'Coyah':[9.71,-13.38], 'Dubréka':[9.79,-13.52],
+  'Kaloum':[9.51,-13.71], 'Dixinn':[9.54,-13.68], 'Ratoma':[9.62,-13.62],
+  'Matam':[9.55,-13.67], 'Matoto':[9.57,-13.64], 'Kipé':[9.59,-13.65],
+  'Taouyah':[9.56,-13.66], 'Lambanyi':[9.62,-13.60], 'Cosa':[9.60,-13.63],
+  'Hamdallaye':[9.59,-13.66], 'Bambéto':[9.60,-13.61], 'Kaporo':[9.61,-13.60],
+  'Enco 5':[9.60,-13.60], 'Sangoyah':[9.58,-13.61], 'Nongo':[9.63,-13.60],
+  'Sonfonia':[9.63,-13.58], 'Kagbélen':[9.65,-13.57], 'Madina':[9.56,-13.67],
+  'Bonfi':[9.53,-13.68], 'Coléah':[9.53,-13.69]
+};
+/* Rayon « Près de moi » : 10 km en ville, 50 km entre villes (ville de départ). */
+const GEO_RADIUS_KM = { ville: 10, inter: 50 };
+/* Vérification des conducteurs de démo : pièce d'identité + permis contrôlés. */
+const DRIVER_INFO = {
+  'Mamadou Bah':{verified:true, plate:'RC 1234 AB'},
+  'Fatoumata Diallo':{verified:true, plate:'RC 5678 CD'},
+  'Ibrahima Sow':{verified:true, plate:'RC 9012 EF'},
+  'Aïcha Camara':{verified:true, plate:'RC 3456 GH'},
+  'Abdoulaye Barry':{verified:false, plate:'RC 7890 IJ'},
+  'Ousmane Sylla':{verified:true, plate:'RC 2345 KL'},
+  'Mariam Condé':{verified:true, plate:'RC 6789 MN'},
+  'Alpha Diallo':{verified:false, plate:'RC 1122 OP'},
+  'Sekou Touré':{verified:true, plate:'RC 3344 QR'},
+  'Aminata Touré':{verified:true, plate:'RC 5566 ST'},
+  'Lamine Keïta':{verified:false, plate:'RC 7788 UV'},
+  'Nabintou Baldé':{verified:true, plate:'RC 9900 WX'},
+  'Moussa Konaté':{verified:false, plate:'RC 1212 YZ'},
+  'Fodé Camara':{verified:true, plate:'RC 3434 AB'},
+  'Thierno Diallo':{verified:true, plate:'RC 5656 CD'},
+  'Kadiatou Barry':{verified:true, plate:'RC 7878 EF'},
+  'Mamadou Yéro Bah':{verified:true, plate:'RC 9090 GH'},
+  'Aïssatou Sow':{verified:false, plate:'RC 1313 IJ'},
+  'Ibrahima Kalil Camara':{verified:true, plate:'RC 2424 KL'},
+  'Fatoumata Binta Diallo':{verified:true, plate:'RC 3535 MN'},
+  'Abdoul Karim Sylla':{verified:true, plate:'RC 4646 OP'},
+  'Mariam Kaba':{verified:false, plate:'RC 5757 QR'},
+  'Oumar Bangoura':{verified:true, plate:'RC 6868 ST'},
+  'Saran Condé':{verified:true, plate:'RC 7979 UV'},
+  'Lamine Touré':{verified:false, plate:'RC 8080 WX'}
+};
 
 /* Trajets de démo : day = décalage en jours à partir d'aujourd'hui (toujours futurs). */
 const DEMO_TRIPS = [
@@ -65,6 +111,11 @@ let currentTab = 'bookings';
 let currentDetailId = null;
 let detailSeats = 1;
 let lastSearch = null;
+let tripStatus = loadJSON(LS_STATUS, {});
+let verification = loadJSON(LS_VERIFY, null);
+let userPos = null; /* {lat, lng} — position du téléphone, jamais enregistrée */
+let geoMode = false;
+let verifiedOnly = false;
 
 /* ---------- Utilitaires ---------- */
 function loadJSON(key, fallback) {
@@ -119,6 +170,89 @@ function toast(msg) {
   t._timer = setTimeout(function () { t.hidden = true; }, 3200);
 }
 
+/* ---------- Géolocalisation : voitures près de moi ---------- */
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function placeCoords(name) { return PLACE_COORDS[name] || null; }
+function tripDistanceKm(trip) {
+  if (!userPos) return null;
+  const c = placeCoords(trip.from);
+  if (!c) return null;
+  return haversineKm(userPos.lat, userPos.lng, c[0], c[1]);
+}
+function fmtDist(km) {
+  if (km === null || km === undefined) return '';
+  if (km < 0.1) return 'ici';
+  if (km < 1) return 'à ' + Math.round(km * 1000) + ' m';
+  if (km < 10) return 'à ' + km.toFixed(1).replace('.', ',') + ' km';
+  return 'à ' + Math.round(km) + ' km';
+}
+function nearbyTrips(list, type) {
+  if (!userPos) return [];
+  const radius = GEO_RADIUS_KM[type] || 10;
+  return list.filter(function (t) {
+    const d = tripDistanceKm(t);
+    return d !== null && d <= radius;
+  }).sort(function (a, b) { return tripDistanceKm(a) - tripDistanceKm(b); });
+}
+function sortByDistance(list) {
+  if (!userPos) return list;
+  return list.slice().sort(function (a, b) {
+    const da = tripDistanceKm(a), db = tripDistanceKm(b);
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
+  });
+}
+
+/* ---------- Vérification conducteurs ---------- */
+function driverVerification(trip) {
+  if (trip.mine) {
+    if (verification && verification.status === 'verified') return { status:'verified', plate: verification.plate || '' };
+    if (verification && verification.status === 'pending') return { status:'pending', plate: verification.plate || '' };
+    return { status:'none', plate: '' };
+  }
+  const info = DRIVER_INFO[trip.driver];
+  if (!info) return { status:'none', plate:'' };
+  return { status: info.verified ? 'verified' : 'none', plate: info.plate || '' };
+}
+function verifyBadgeHTML(v) {
+  if (v.status === 'verified') return '<span class="pill verified"><svg class="ic"><use href="#i-shield"/></svg>Vérifié</span>';
+  if (v.status === 'pending') return '<span class="pill pending"><svg class="ic"><use href="#i-clock"/></svg>Vérification en cours</span>';
+  return '';
+}
+function verifyLineHTML(v) {
+  if (v.status === 'verified') return '<div class="verify-line ok"><svg class="ic"><use href="#i-shield"/></svg><span><b>Conducteur vérifié</b> — pièce d\u2019identité et permis contrôlés par l\u2019équipe Yaaden.</span></div>';
+  if (v.status === 'pending') return '<div class="verify-line pending"><svg class="ic"><use href="#i-clock"/></svg><span><b>Vérification en cours</b> — documents envoyés, contrôle sous 24 h.</span></div>';
+  return '<div class="verify-line none"><svg class="ic"><use href="#i-shield"/></svg><span><b>Identité non vérifiée.</b> Échangez sur WhatsApp avec le conducteur avant le départ.</span></div>';
+}
+
+/* ---------- Alerte d'arrivée ---------- */
+function getTripStatus(id) { return tripStatus[id] || null; }
+function setTripStatus(id, status) {
+  if (status) tripStatus[id] = status; else delete tripStatus[id];
+  saveJSON(LS_STATUS, tripStatus);
+}
+function arrivalBadgeHTML(trip) {
+  const s = getTripStatus(trip.id);
+  if (s === 'arrived') return '<span class="pill arrived"><svg class="ic"><use href="#i-pin"/></svg>Le conducteur est arrivé</span>';
+  if (s === 'arriving') return '<span class="pill arriving"><svg class="ic"><use href="#i-car"/></svg>Le conducteur arrive</span>';
+  return '';
+}
+function arrivalStatusHTML(trip) {
+  const s = getTripStatus(trip.id);
+  if (s === 'arrived') return '<div class="arrival-status arrived"><svg class="ic"><use href="#i-pin"/></svg><span><b>Le conducteur est arrivé</b> au point de rendez-vous.</span></div>';
+  if (s === 'arriving') return '<div class="arrival-status arriving"><svg class="ic"><use href="#i-car"/></svg><span><b>Le conducteur arrive</b> — il est tout près.</span></div>';
+  return '<div class="arrival-status idle"><svg class="ic"><use href="#i-clock"/></svg><span>Le conducteur vous préviendra quand il sera à côté.</span></div>';
+}
+
 /* ---------- Données : démo + publiés ---------- */
 function allTrips() {
   const demo = DEMO_TRIPS.map(function (t, i) {
@@ -168,6 +302,9 @@ function tripCardHTML(trip) {
         : '<span class="pill"><svg class="ic"><use href="#i-car"/></svg>Entre villes</span>') +
       '<span class="pill seats' + (low ? ' low' : '') + '"><svg class="ic"><use href="#i-seat"/></svg>' +
         (left === 0 ? 'Complet' : left + (left > 1 ? ' places restantes' : ' place restante')) + '</span>' +
+      (userPos && tripDistanceKm(trip) !== null ? '<span class="pill dist"><svg class="ic"><use href="#i-pin"/></svg>Départ ' + esc(fmtDist(tripDistanceKm(trip))) + '</span>' : '') +
+      verifyBadgeHTML(driverVerification(trip)) +
+      arrivalBadgeHTML(trip) +
       (booked ? '<span class="booking-badge"><svg class="ic"><use href="#i-check"/></svg>Réservé : ' + booked.seats + ' place' + (booked.seats > 1 ? 's' : '') + '</span>' : '') +
       (trip.mine ? '<span class="pill"><svg class="ic"><use href="#i-car"/></svg>Mon trajet</span>' : '') +
       optionPills(trip) +
@@ -203,15 +340,74 @@ function upcomingTrips(type) {
 function typeTitle(type) {
   return type === 'ville' ? 'Prochains départs · En ville à Conakry' : 'Prochains départs · Entre villes';
 }
+/* Filtres actifs : conducteurs vérifiés, puis « Près de moi » (ou tri par distance). */
+function applyFilters(list) {
+  let out = list;
+  if (verifiedOnly) out = out.filter(function (t) { return driverVerification(t).status === 'verified'; });
+  if (geoMode && userPos) {
+    const near = nearbyTrips(out, searchType);
+    out = near.length ? near : sortByDistance(out);
+  } else if (userPos) {
+    out = sortByDistance(out);
+  }
+  return out;
+}
+/* Bandeau « voitures près de vous » au-dessus des résultats. */
+function renderGeoBanner(list) {
+  const b = document.getElementById('geo-banner');
+  if (!userPos) { b.hidden = true; return; }
+  const near = nearbyTrips(list, searchType);
+  if (geoMode) {
+    b.hidden = false;
+    b.innerHTML = near.length
+      ? '<svg class="ic"><use href="#i-pin"/></svg><span><b>' + near.length + ' voiture' + (near.length > 1 ? 's' : '') + ' près de vous</b> — départ à moins de ' + GEO_RADIUS_KM[searchType] + ' km.</span>'
+      : '<svg class="ic"><use href="#i-pin"/></svg><span><b>Aucune voiture à proximité.</b> Voici les prochains départs.</span>';
+  } else if (near.length) {
+    b.hidden = false;
+    b.innerHTML = '<svg class="ic"><use href="#i-pin"/></svg><span><b>' + near.length + ' voiture' + (near.length > 1 ? 's' : '') + ' près de vous</b> dans ces résultats.</span>';
+  } else {
+    b.hidden = true;
+  }
+}
+function renderSearchResults(list, title) {
+  const filtered = applyFilters(list);
+  if (geoMode && userPos && !lastSearch) title = 'Voitures près de vous';
+  renderResults(filtered, title);
+  renderGeoBanner(filtered);
+}
 /* Re-rend la liste de recherche selon la dernière recherche ou le type courant. */
 function refreshResults() {
   if (lastSearch) {
-    renderResults(upcomingTrips(lastSearch.type).filter(function (t) {
+    renderSearchResults(upcomingTrips(lastSearch.type).filter(function (t) {
       return t.from === lastSearch.from && t.to === lastSearch.to && (!lastSearch.date || t.date === lastSearch.date);
     }), lastSearch.from + ' → ' + lastSearch.to);
   } else {
-    renderResults(upcomingTrips(searchType), typeTitle(searchType));
+    renderSearchResults(upcomingTrips(searchType), typeTitle(searchType));
   }
+}
+/* Bouton « Voitures près de moi » : demande la position, puis montre les départs proches. */
+function toggleGeo() {
+  const btn = document.getElementById('geo-btn');
+  if (geoMode) {
+    geoMode = false;
+    btn.classList.remove('active');
+    refreshResults();
+    return;
+  }
+  if (!('geolocation' in navigator)) { toast('La géolocalisation n’est pas disponible sur cet appareil.'); return; }
+  btn.classList.add('loading');
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    geoMode = true;
+    btn.classList.remove('loading');
+    btn.classList.add('active');
+    lastSearch = null;
+    refreshResults();
+    document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+  }, function () {
+    btn.classList.remove('loading');
+    toast('Impossible de vous localiser. Vérifiez que la localisation est autorisée pour Yaaden.');
+  }, { enableHighAccuracy:false, timeout:8000, maximumAge:60000 });
 }
 
 /* ---------- Recherche ---------- */
@@ -223,12 +419,12 @@ function runSearch() {
   const list = upcomingTrips(searchType).filter(function (t) {
     return t.from === from && t.to === to && (!date || t.date === date) && seatsLeft(t) >= passengers;
   });
-  renderResults(list, from + ' → ' + to);
+  renderSearchResults(list, from + ' → ' + to);
   document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 function showAll() {
   lastSearch = null;
-  renderResults(upcomingTrips(searchType), typeTitle(searchType));
+  renderSearchResults(upcomingTrips(searchType), typeTitle(searchType));
 }
 function renderPopularChips() {
   const gradients = [
@@ -272,7 +468,7 @@ function setSearchType(type) {
   }
   lastSearch = null;
   renderPopularChips();
-  renderResults(upcomingTrips(type), typeTitle(type));
+  renderSearchResults(upcomingTrips(type), typeTitle(type));
 }
 function setPubType(type) {
   pubType = type;
@@ -311,6 +507,7 @@ function renderMyTrips() {
         trip.from + ' → ' + trip.to + ' du ' + shortDate(trip.date) + ' à ' + trip.time +
         ' (' + b.seats + ' place' + (b.seats > 1 ? 's' : '') + ').';
       return '<div>' + tripCardHTML(trip) +
+        arrivalStatusHTML(trip) +
         '<div class="my-trip-actions">' +
           '<a class="btn btn-wa btn-small" href="' + waLink(trip.phone, msg) + '" target="_blank" rel="noopener"><svg class="ic"><use href="#i-wa"/></svg> WhatsApp</a>' +
           '<button type="button" class="btn btn-danger btn-small" data-cancel-booking="' + esc(b.id) + '">Annuler</button>' +
@@ -326,9 +523,22 @@ function renderMyTrips() {
     box.innerHTML = myTrips.map(function (t) {
       const reserved = bookings.filter(function (b) { return b.tripId === t.id; })
         .reduce(function (s, b) { return s + b.seats; }, 0);
+      const st = getTripStatus(t.id);
+      const notifyMsg = 'Bonjour ! Je suis arrivé au point de rendez-vous pour le trajet Yaaden ' +
+        t.from + ' → ' + t.to + ' du ' + shortDate(t.date) + ' à ' + t.time + '.';
       return '<div>' + tripCardHTML(t) +
+        (st === 'arrived'
+          ? '<div class="arrival-status arrived"><svg class="ic"><use href="#i-pin"/></svg><span><b>Vous avez signalé : je suis arrivé.</b> Vos passagers le voient.</span> <button type="button" class="link-btn" data-arrival-clear="' + esc(t.id) + '">Annuler</button></div>'
+          : st === 'arriving'
+          ? '<div class="arrival-status arriving"><svg class="ic"><use href="#i-car"/></svg><span><b>Vous avez signalé : j’arrive.</b> Vos passagers le voient.</span> <button type="button" class="link-btn" data-arrival-clear="' + esc(t.id) + '">Annuler</button></div>'
+          : '') +
         '<div class="my-trip-actions">' +
           '<span class="booking-badge" style="align-self:center">' + reserved + ' place' + (reserved > 1 ? 's' : '') + ' réservée' + (reserved > 1 ? 's' : '') + '</span>' +
+          '<button type="button" class="btn btn-outline btn-small" data-arrival="arriving" data-arrival-trip="' + esc(t.id) + '">J’arrive</button>' +
+          '<button type="button" class="btn btn-primary btn-small" data-arrival="arrived" data-arrival-trip="' + esc(t.id) + '">Je suis arrivé</button>' +
+        '</div>' +
+        '<div class="my-trip-actions">' +
+          '<a class="btn btn-wa btn-small" href="https://wa.me/?text=' + encodeURIComponent(notifyMsg) + '" target="_blank" rel="noopener"><svg class="ic"><use href="#i-wa"/></svg> Prévenir les passagers</a>' +
           '<button type="button" class="btn btn-danger btn-small" data-cancel-trip="' + esc(t.id) + '">Supprimer le trajet</button>' +
         '</div></div>';
     }).join('');
@@ -355,8 +565,10 @@ function renderDetail() {
   const total = trip.price * detailSeats;
   const msg = 'Bonjour ' + trip.driver + ' ! Je suis intéressé par votre trajet Yaaden ' +
     trip.from + ' → ' + trip.to + ' du ' + shortDate(trip.date) + ' à ' + trip.time + '.';
+  const v = driverVerification(trip);
   let html = '<h2 id="detail-title">' + esc(trip.from) + ' → ' + esc(trip.to) + '</h2>' +
     '<p class="detail-route"><b>' + esc(prettyDate(trip.date)) + '</b> · départ à <b>' + esc(trip.time) + '</b></p>' +
+    verifyLineHTML(v) +
     '<div class="detail-driver">' + avatarHTML(trip.driver) +
       '<div class="driver-info"><div class="driver-name">' + esc(trip.driver) + '</div>' +
       '<div class="driver-sub"><svg class="ic"><use href="#i-star"/></svg>' + trip.rating.toFixed(1) +
@@ -368,6 +580,7 @@ function renderDetail() {
       '<div class="detail-cell"><div class="lbl">Places restantes</div><div class="val">' + left + ' / ' + trip.seats + '</div></div>' +
       '<div class="detail-cell"><div class="lbl">Rendez-vous</div><div class="val" style="font-size:.92rem">' + esc(trip.meeting || 'À convenir') + '</div></div>' +
       '<div class="detail-cell"><div class="lbl">Paiement</div><div class="val" style="font-size:.92rem">Espèces ou Orange Money</div></div>' +
+      '<div class="detail-cell wide"><div class="lbl">Plaque d\u2019immatriculation</div><div class="val plate-val">' + esc(v.plate || 'Non précisée') + '</div></div>' +
     '</div>' +
     '<div class="trip-meta" style="margin:0 0 16px">' + optionPills(trip) + '</div>';
   if (trip.desc) html += '<p class="detail-desc">' + esc(trip.desc) + '</p>';
@@ -376,6 +589,7 @@ function renderDetail() {
   } else if (booked) {
     html += '<div class="booked-ok"><svg class="ic"><use href="#i-check"/></svg>Vous avez réservé ' + booked.seats +
       ' place' + (booked.seats > 1 ? 's' : '') + ' sur ce trajet.</div>' +
+      arrivalStatusHTML(trip) +
       '<div class="sheet-actions"><button type="button" class="btn btn-danger" id="detail-cancel-booking">Annuler ma réservation</button></div>';
   } else if (left === 0) {
     html += '<div class="booked-ok" style="background:#FFF1F1;color:var(--danger)">Ce trajet est complet.</div>';
@@ -430,7 +644,9 @@ const YAA_KB = [
   { keys:['en ville','conakry','quartier','heures de pointe','pointe','kipe','bambeto','kaloum','cosa','matoto','ratoma'], answer:'Oui, Yaaden couvre aussi Conakry ! Choisissez « En ville · Conakry » dans la recherche pour trouver des places entre quartiers : Kipé, Cosa, Bambéto, Kaloum… C\u2019est idéal aux heures de pointe, de 7h à 9h et de 17h à 19h.' },
   { keys:['entre villes','long trajet','voyage','kindia','labe','kankan','mamou','boke','voyager'], answer:'Pour les longs trajets, choisissez « Entre villes » : Conakry → Kindia, Labé, Kankan, Mamou, Boké et plus. Les conducteurs partent avec des places libres — réservez la vôtre.' },
   { keys:['contacter','joindre','parler au conducteur','numero','telephone conducteur','whatsapp conducteur'], answer:'Pour joindre un conducteur : ouvrez la fiche de son trajet et touchez le bouton WhatsApp. Vous pouvez lui écrire avant même de réserver.' },
-  { keys:['securite','sur','confiance','dangereux','risque','arnaque'], answer:'Chaque conducteur affiche sa note et son nombre de trajets. Vérifiez-les, regardez le véhicule indiqué et échangez sur WhatsApp avant le départ. En cas de problème, écrivez à l\u2019équipe Yaaden sur WhatsApp avec le bouton vert ci-dessous.' },
+  { keys:['securite','sur','confiance','dangereux','risque','arnaque'], answer:'Regardez le badge « Vérifié » sur la carte du trajet : il veut dire que la pièce d\u2019identité et le permis du conducteur ont été contrôlés par l\u2019équipe Yaaden. Vérifiez aussi sa note, son nombre de trajets et sa plaque, et échangez sur WhatsApp avant le départ. En cas de problème, écrivez à l\u2019équipe Yaaden sur WhatsApp avec le bouton vert ci-dessous.' },
+  { keys:['verifi','verifier','identite','piece','permis','badge'], answer:'Pour devenir conducteur vérifié : allez dans « Profil », section « Vérification conducteur », puis envoyez la photo de votre pièce d\u2019identité et un selfie. L\u2019équipe Yaaden contrôle vos documents sous 24 h et vos trajets affichent ensuite le badge « Vérifié ». Côté passager, vous pouvez aussi filtrer la recherche sur « Conducteurs vérifiés ».' },
+  { keys:['arrive','arrivee','ou est','pres de moi','a cote','geolocalisation','position','pret'], answer:'Touchez « Voitures près de moi » sur l\u2019accueil : Yaaden utilise votre position pour montrer les départs proches de vous. Et quand vous avez réservé, le conducteur signale « J\u2019arrive » puis « Je suis arrivé » : vous le voyez dans « Mes trajets ». Vous pouvez aussi lui écrire sur WhatsApp pour savoir où il en est.' },
   { keys:['profil','compte','inscrire','inscription','creer un compte','donnees'], answer:'Pas de compte à créer : remplissez simplement votre profil dans l\u2019onglet « Profil » (nom, téléphone WhatsApp, véhicule). Vos données restent sur votre téléphone.' },
   { keys:['gratuit','commission','frais'], answer:'Yaaden est gratuit pour le moment : aucune commission sur vos trajets, le paiement va directement au conducteur.' },
   { keys:['bagage','valise','sac'], answer:'Regardez les options sur la carte du trajet : si « Bagages acceptés » est affiché, le conducteur a de la place pour vos bagages.' },
@@ -447,7 +663,7 @@ function yaaAnswer(q) {
   });
   return best ? best.answer : YAA_FALLBACK;
 }
-const YAA_CHIPS = ['Comment réserver ?', 'Comment payer ?', 'Publier un trajet', 'Trajets en ville à Conakry', 'Parler à une personne'];
+const YAA_CHIPS = ['Comment réserver ?', 'Comment payer ?', 'Publier un trajet', 'Conducteurs vérifiés', 'Voitures près de moi', 'Parler à une personne'];
 function yaaWelcome() {
   return 'Bonjour ! Je suis Yaa. Une question sur un trajet ou un paiement ? Je réponds tout de suite.';
 }
@@ -542,6 +758,54 @@ function fillProfileForm() {
   }
 }
 
+/* ---------- Vérification conducteur : documents + WhatsApp ---------- */
+function renderVerifyStatus() {
+  const box = document.getElementById('verify-status');
+  const form = document.getElementById('verify-form');
+  if (!verification) {
+    box.innerHTML = '';
+    form.hidden = false;
+    return;
+  }
+  form.hidden = true;
+  if (verification.status === 'verified') {
+    box.innerHTML = '<div class="verify-status-box ok"><svg class="ic"><use href="#i-shield"/></svg><div><strong>Identité vérifiée</strong><span>Vos trajets affichent le badge « Vérifié ». Plaque : ' + esc(verification.plate || '—') + '</span></div></div>';
+  } else {
+    box.innerHTML = '<div class="verify-status-box pending"><svg class="ic"><use href="#i-clock"/></svg><div><strong>Demande envoyée — vérification en cours</strong><span>L\u2019équipe Yaaden contrôle vos documents sous 24 h. Plaque : ' + esc(verification.plate || '—') + '</span></div></div>' +
+      '<button type="button" class="btn btn-outline btn-small" id="verify-edit" style="margin-top:10px">Modifier ma demande</button>';
+    const edit = document.getElementById('verify-edit');
+    if (edit) edit.addEventListener('click', function () { form.hidden = false; box.innerHTML = ''; });
+  }
+}
+/* Réduit une photo (max 900 px, JPEG) pour la garder dans le téléphone. */
+function fileToDataURL(file, cb) {
+  const reader = new FileReader();
+  reader.onload = function () {
+    const img = new Image();
+    img.onload = function () {
+      const max = 900, scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      try { cb(c.toDataURL('image/jpeg', 0.75)); } catch (e) { cb(null); }
+    };
+    img.onerror = function () { cb(null); };
+    img.src = reader.result;
+  };
+  reader.onerror = function () { cb(null); };
+  reader.readAsDataURL(file);
+}
+function previewFile(input, previewId) {
+  const f = input.files && input.files[0];
+  const box = document.getElementById(previewId);
+  if (!f) { box.innerHTML = ''; return; }
+  fileToDataURL(f, function (data) {
+    box.innerHTML = data ? '<img src="' + data + '" alt="Aperçu">' : '';
+    input._data = data || null;
+  });
+}
+
 /* ---------- Initialisation ---------- */
 function fillCitySelect(select, selected, list) {
   const places = list || CITIES;
@@ -562,9 +826,10 @@ function init() {
   document.getElementById('pub-date').value = dateFromOffset(1);
   document.getElementById('pub-date').min = dateFromOffset(0);
   renderPopularChips();
-  renderResults(upcomingTrips(searchType), typeTitle(searchType));
+  renderSearchResults(upcomingTrips(searchType), typeTitle(searchType));
   renderMyTrips();
   fillProfileForm();
+  renderVerifyStatus();
 
   /* Bascule Entre villes / En ville (recherche + publication) */
   document.querySelectorAll('[data-search-type]').forEach(function (b) {
@@ -593,6 +858,11 @@ function init() {
     const v = f.value; f.value = t.value; t.value = v;
   });
   document.getElementById('show-all-btn').addEventListener('click', showAll);
+  document.getElementById('geo-btn').addEventListener('click', toggleGeo);
+  document.getElementById('verified-only').addEventListener('change', function (e) {
+    verifiedOnly = e.target.checked;
+    refreshResults();
+  });
   document.querySelectorAll('.step-btn[data-step]').forEach(function (b) {
     b.addEventListener('click', function () {
       passengers = Math.max(1, Math.min(6, passengers + Number(b.dataset.step)));
@@ -610,6 +880,22 @@ function init() {
 
   /* Clic sur une carte trajet (délégation) */
   document.addEventListener('click', function (e) {
+    const arrival = e.target.closest('[data-arrival]');
+    if (arrival) {
+      setTripStatus(arrival.dataset.arrivalTrip, arrival.dataset.arrival);
+      renderMyTrips();
+      refreshResults();
+      toast(arrival.dataset.arrival === 'arrived' ? 'Vos passagers sont prévenus : vous êtes arrivé.' : 'Vos passagers sont prévenus : vous arrivez.');
+      return;
+    }
+    const arrivalClear = e.target.closest('[data-arrival-clear]');
+    if (arrivalClear) {
+      setTripStatus(arrivalClear.dataset.arrivalClear, null);
+      renderMyTrips();
+      refreshResults();
+      toast('Signal annulé.');
+      return;
+    }
     const card = e.target.closest('[data-trip]');
     if (card) { openDetail(card.dataset.trip); return; }
     const cancelB = e.target.closest('[data-cancel-booking]');
@@ -699,6 +985,27 @@ function init() {
     saveJSON(LS_PROFILE, profile);
     fillProfileForm();
     toast('Profil enregistré !');
+  });
+
+  /* Vérification conducteur */
+  document.getElementById('verify-id').addEventListener('change', function (e) { previewFile(e.target, 'verify-id-preview'); });
+  document.getElementById('verify-selfie').addEventListener('change', function (e) { previewFile(e.target, 'verify-selfie-preview'); });
+  document.getElementById('verify-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const plate = document.getElementById('verify-plate').value.trim();
+    const idInput = document.getElementById('verify-id');
+    const selfieInput = document.getElementById('verify-selfie');
+    if (!plate) { toast('Indiquez votre plaque d\u2019immatriculation.'); return; }
+    if (!idInput._data) { toast('Ajoutez la photo de votre pièce d\u2019identité.'); return; }
+    if (!selfieInput._data) { toast('Ajoutez un selfie (photo de vous, face visible).'); return; }
+    verification = { status:'pending', plate: plate, idDoc: idInput._data, selfie: selfieInput._data, at: new Date().toISOString() };
+    saveJSON(LS_VERIFY, verification);
+    renderVerifyStatus();
+    refreshResults();
+    renderMyTrips();
+    const name = (profile && profile.name) ? profile.name : 'Bonjour';
+    window.open(waLink(SUPPORT_WA, name + ', conducteur Yaaden. Je viens d\u2019envoyer ma demande de vérification (plaque ' + plate + '). Voici mes documents :'), '_blank');
+    toast('Demande envoyée ! Envoyez vos photos à l\u2019équipe sur WhatsApp.');
   });
 
   /* Feuille détail */

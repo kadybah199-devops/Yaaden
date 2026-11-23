@@ -145,6 +145,10 @@
         <button type="submit" class="btn btn-primary btn-big">
           <svg class="ic"><use href="#i-search"/></svg> Rechercher un trajet
         </button>
+        <div class="geo-row">
+          <button type="button" class="geo-btn" id="geo-btn"><svg class="ic"><use href="#i-pin"/></svg> Voitures près de moi</button>
+          <label class="chip-check"><input type="checkbox" id="verified-only"><span><svg class="ic"><use href="#i-shield"/></svg> Conducteurs vérifiés</span></label>
+        </div>
       </form>
 
       <div class="marquee" aria-hidden="true">
@@ -183,6 +187,8 @@
       </div>
       <div class="chips" id="popular-chips"></div>
 
+      <div class="geo-banner" id="geo-banner" hidden></div>
+
       <div class="section-head">
         <h2 id="results-title">Prochains départs</h2>
         <span class="results-count" id="results-count"></span>
@@ -196,7 +202,7 @@
         </div>
         <div class="info-item">
           <svg class="ic"><use href="#i-shield"/></svg>
-          <div><strong>Conducteurs notés</strong></div>
+          <div><strong>Conducteurs vérifiés</strong></div>
         </div>
         <div class="info-item">
           <svg class="ic"><use href="#i-wa"/></svg>
@@ -316,6 +322,30 @@
         </button>
         <p class="form-note">Vos données restent sur votre téléphone.</p>
       </form>
+
+      <div class="form-card" id="verify-card">
+        <h2 class="verify-title"><svg class="ic"><use href="#i-shield"/></svg> Vérification conducteur</h2>
+        <p class="verify-sub">Faites vérifier votre identité pour rassurer vos passagers : vos trajets affichent le badge « Vérifié ».</p>
+        <div id="verify-status"></div>
+        <form id="verify-form" autocomplete="off">
+          <label class="field">
+            <span class="field-label"><svg class="ic"><use href="#i-car"/></svg> Plaque d'immatriculation</span>
+            <input type="text" id="verify-plate" placeholder="Ex. : RC 1234 AB" maxlength="20">
+          </label>
+          <label class="field">
+            <span class="field-label">Photo de votre pièce d'identité</span>
+            <input type="file" id="verify-id" accept="image/*" class="file-input">
+            <span class="file-preview" id="verify-id-preview"></span>
+          </label>
+          <label class="field">
+            <span class="field-label">Selfie (photo de vous, face visible)</span>
+            <input type="file" id="verify-selfie" accept="image/*" class="file-input">
+            <span class="file-preview" id="verify-selfie-preview"></span>
+          </label>
+          <p class="form-note"><svg class="ic"><use href="#i-shield"/></svg> Vos documents restent sur votre téléphone. Envoyez-les à l'équipe Yaaden sur WhatsApp : vérification sous 24 h.</p>
+          <button type="submit" class="btn btn-primary btn-big"><svg class="ic"><use href="#i-check"/></svg> Envoyer pour vérification</button>
+        </form>
+      </div>
       <div class="info-strip">
         <div class="info-item">
           <svg class="ic"><use href="#i-money"/></svg>
@@ -324,7 +354,7 @@
       </div>
       <footer class="app-footer">
         <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
-        <p>Yaaden — version 4.0<br>Un service de <strong>Digifind</strong></p>
+        <p>Yaaden — version 5.0<br>Un service de <strong>Digifind</strong></p>
       </footer>
     </section>
   </main>

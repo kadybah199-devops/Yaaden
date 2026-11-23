@@ -19,6 +19,18 @@ Un service de **Digifind** — transformation digitale & IA.
 - **Paiement** : espèces ou Orange Money, directement entre passager et conducteur.
 - **PWA installable** : manifest + service worker, fonctionne hors connexion après la première visite.
 
+## Nouveautés (v4 — « Nuit Conakry »)
+
+- **Thème sombre choisi par Shahid** (après le retour « trop d'écriture, je n'aime
+  pas les couleurs » sur la v3) : fond bleu nuit profond (#0B1F33), cartes
+  bleu nuit relevé, texte blanc, une seule touche menthe (#3DDC97). Les couleurs
+  chaudes (crème, orange, jaune soleil) sont parties ; les autocollants blancs
+  ressortent sur le fond nuit. La photo de Conakry reste dans le hero, sous un
+  voile nuit plus appuyé.
+- **Texte allégé partout** : titre réduit à « Trouvez votre place. », paragraphes
+  d'explication supprimés (étapes, « Pourquoi Yaaden ? », bandeaux), message
+  d'accueil de Yaa raccourci.
+
 ## Nouveautés (v3 — « Ticket tropical »)
 
 - **Identité visuelle qui sort du lot** : fond crème chaud, polices arrondies

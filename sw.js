@@ -1,5 +1,5 @@
 /* Yaaden — service worker : l'appli fonctionne hors connexion après la première visite. */
-const CACHE = 'yaaden-v3';
+const CACHE = 'yaaden-v4';
 const FILES = [
   './',
   './index.html',

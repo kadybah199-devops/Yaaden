@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yaaden — Covoiturage en Guinée | Un service Digifind</title>
 <meta name="description" content="Yaaden, le covoiturage en Guinée : trouvez une place Conakry – Kindia, Labé, Kankan… ou publiez votre trajet. Paiement en espèces ou Orange Money. Un service Digifind.">
-<meta name="theme-color" content="#0E2A47">
+<meta name="theme-color" content="#0B1F33">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -100,8 +100,8 @@
     <section class="screen active" id="screen-search">
       <div class="hero">
         <span class="hero-eyebrow"><span class="live-dot"></span> Heures de pointe</span>
-        <h1>Fini d'attendre un taxi.<br>Trouvez <span class="hl">votre place.</span></h1>
-        <p>Des conducteurs partent déjà dans votre direction — Kipé, Cosa, Bambéto, Kaloum… Montez avec eux, payez moins cher.</p>
+        <h1>Trouvez <span class="hl">votre place.</span></h1>
+        <p>Des conducteurs vont déjà dans votre direction.</p>
         <span class="sticker sticker-a">Moins cher<br>qu'un taxi</span>
         <div class="hero-road" aria-hidden="true"><span class="road-car"><svg class="ic"><use href="#i-car"/></svg></span></div>
         <div class="hero-stats">
@@ -158,15 +158,14 @@
         <h2>Comment ça marche ?</h2>
       </div>
       <div class="steps">
-        <div class="step"><span class="step-num">1</span><svg class="ic"><use href="#i-search"/></svg><strong>Cherchez</strong><span>Votre trajet, en ville ou entre villes.</span></div>
-        <div class="step"><span class="step-num">2</span><svg class="ic"><use href="#i-ticket"/></svg><strong>Réservez</strong><span>Votre place en quelques secondes.</span></div>
-        <div class="step"><span class="step-num">3</span><svg class="ic"><use href="#i-money"/></svg><strong>Payez</strong><span>Au conducteur : espèces ou Orange Money.</span></div>
+        <div class="step"><span class="step-num">1</span><svg class="ic"><use href="#i-search"/></svg><strong>Cherchez</strong></div>
+        <div class="step"><span class="step-num">2</span><svg class="ic"><use href="#i-ticket"/></svg><strong>Réservez</strong></div>
+        <div class="step"><span class="step-num">3</span><svg class="ic"><use href="#i-money"/></svg><strong>Payez</strong></div>
       </div>
 
       <div class="why">
         <h2>Pourquoi Yaaden ?</h2>
-        <p>Aux heures de pointe, les taxis sont pleins et certains axes n'en ont presque pas. Pourtant, des voitures partent dans la même direction avec des places vides.</p>
-        <div class="why-points">
+                <div class="why-points">
           <span><svg class="ic"><use href="#i-clock"/></svg> Moins d'attente aux heures de pointe</span>
           <span><svg class="ic"><use href="#i-money"/></svg> Moins cher qu'un taxi seul</span>
           <span><svg class="ic"><use href="#i-seat"/></svg> Des voisins qui vont au même endroit</span>
@@ -174,8 +173,8 @@
       </div>
 
       <div class="driver-cta">
-        <div><strong>Vous avez une voiture ?</strong><span>Publiez vos places libres et réduisez vos frais de route.</span></div>
-        <button class="btn btn-sun btn-small" id="driver-cta-btn" type="button">Publier un trajet</button>
+        <div><strong>Vous avez une voiture ?</strong><span>Publiez vos places libres.</span></div>
+        <button class="btn btn-mint btn-small" id="driver-cta-btn" type="button">Publier un trajet</button>
       </div>
 
       <div class="section-head">
@@ -193,21 +192,21 @@
       <div class="info-strip">
         <div class="info-item">
           <svg class="ic"><use href="#i-money"/></svg>
-          <div><strong>Espèces ou Orange&nbsp;Money</strong><span>Payez comme vous voulez, directement au conducteur.</span></div>
+          <div><strong>Espèces ou Orange Money</strong></div>
         </div>
         <div class="info-item">
           <svg class="ic"><use href="#i-shield"/></svg>
-          <div><strong>Conducteurs notés</strong><span>Notes et avis des passagers sur chaque trajet.</span></div>
+          <div><strong>Conducteurs notés</strong></div>
         </div>
         <div class="info-item">
           <svg class="ic"><use href="#i-wa"/></svg>
-          <div><strong>Contact WhatsApp</strong><span>Échangez avec le conducteur avant le départ.</span></div>
+          <div><strong>Contact WhatsApp</strong></div>
         </div>
       </div>
 
       <footer class="app-footer">
         <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
-        <p>Yaaden est un service de <strong>Digifind</strong><br>Transformation digitale &amp; IA — Guinée<br><span class="photo-credit">Photo d'accueil : rond-point de Conakry (Financial Afrik)</span></p>
+        <p>Yaaden · Un service de <strong>Digifind</strong><br><span class="photo-credit">Photo : rond-point de Conakry (Financial Afrik)</span></p>
       </footer>
     </section>
 
@@ -272,7 +271,7 @@
           <span class="field-label">Description (facultatif)</span>
           <textarea id="pub-desc" rows="3" maxlength="280" placeholder="Ex. : Départ ponctuel, pause à Kindia, conduite tranquille…"></textarea>
         </label>
-        <p class="form-note"><svg class="ic"><use href="#i-money"/></svg> Le paiement se fait en espèces ou via Orange Money, directement avec vos passagers.</p>
+        <p class="form-note"><svg class="ic"><use href="#i-money"/></svg> Paiement direct avec le passager : espèces ou Orange Money.</p>
         <button type="submit" class="btn btn-primary btn-big">
           <svg class="ic"><use href="#i-plus"/></svg> Publier mon trajet
         </button>
@@ -315,7 +314,7 @@
         <button type="submit" class="btn btn-primary btn-big">
           <svg class="ic"><use href="#i-check"/></svg> Enregistrer mon profil
         </button>
-        <p class="form-note">Vos données restent sur votre téléphone. Aucun compte à créer pour cette première version.</p>
+        <p class="form-note">Vos données restent sur votre téléphone.</p>
       </form>
       <div class="info-strip">
         <div class="info-item">
@@ -325,7 +324,7 @@
       </div>
       <footer class="app-footer">
         <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
-        <p>Yaaden — version 3.0<br>Un service de <strong>Digifind</strong></p>
+        <p>Yaaden — version 4.0<br>Un service de <strong>Digifind</strong></p>
       </footer>
     </section>
   </main>

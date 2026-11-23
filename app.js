@@ -14,7 +14,7 @@ const LS_CHAT_SEEN = 'yaaden_chat_seen_v1';
 /* WhatsApp d'assistance Yaaden (équipe Digifind à Conakry). */
 const SUPPORT_WA = '224620685645';
 const SUPPORT_WA_MSG = 'Bonjour, j\u2019ai besoin d\u2019aide sur Yaaden.';
-const AVATAR_COLORS = ['#0E2A47','#00B894','#E67E22','#8E44AD','#2E86DE','#C0392B','#16A085','#D35400'];
+const AVATAR_COLORS = ['#00B894','#3DDC97','#4D9DE0','#8B7CF6','#E86AA8','#2BB3A3','#1B6FA8','#5B4DBC'];
 
 /* Trajets de démo : day = décalage en jours à partir d'aujourd'hui (toujours futurs). */
 const DEMO_TRIPS = [
@@ -232,11 +232,11 @@ function showAll() {
 }
 function renderPopularChips() {
   const gradients = [
-    'linear-gradient(135deg,#0E2A47,#0B5E4B)',
-    'linear-gradient(135deg,#FF6B1A,#C2410C)',
-    'linear-gradient(135deg,#00967A,#0B5E4B)',
-    'linear-gradient(135deg,#12395E,#0E2A47)',
-    'linear-gradient(135deg,#E85D04,#9A3412)'
+    'linear-gradient(135deg,#14324D,#0B5E4B)',
+    'linear-gradient(135deg,#00B894,#0B5E4B)',
+    'linear-gradient(135deg,#1B6FA8,#14324D)',
+    'linear-gradient(135deg,#5B4DBC,#14324D)',
+    'linear-gradient(135deg,#0B5E4B,#14324D)'
   ];
   const popular = searchType === 'ville' ? [
     { from:'Kipé', to:'Kaloum', price:40000 },
@@ -300,7 +300,6 @@ function renderMyTrips() {
   if (currentTab === 'bookings') {
     if (!bookings.length) {
       box.innerHTML = '<div class="empty"><strong>Aucune réservation pour le moment</strong>' +
-        '<p>Recherchez un trajet et réservez votre place en quelques secondes.</p>' +
         '<button type="button" class="btn btn-primary btn-small" id="empty-search">Rechercher un trajet</button></div>';
       document.getElementById('empty-search').addEventListener('click', function () { showScreen('search'); });
       return;
@@ -320,7 +319,6 @@ function renderMyTrips() {
   } else {
     if (!myTrips.length) {
       box.innerHTML = '<div class="empty"><strong>Vous n\u2019avez publié aucun trajet</strong>' +
-        '<p>Partagez vos places libres et réduisez vos frais de route.</p>' +
         '<button type="button" class="btn btn-primary btn-small" id="empty-publish2">Publier un trajet</button></div>';
       document.getElementById('empty-publish2').addEventListener('click', function () { showScreen('publish'); });
       return;
@@ -420,7 +418,7 @@ let yaaTimer = null;
 function norm(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
-const YAA_FALLBACK = 'Je n\u2019ai pas la réponse à cette question pour le moment. Touchez le bouton vert ci-dessous pour parler à une personne de l\u2019équipe Yaaden sur WhatsApp — on vous répond rapidement. Vous pouvez aussi essayer : « Comment réserver ? », « Comment payer ? » ou « Comment publier un trajet ? ».';
+const YAA_FALLBACK = 'Je n\u2019ai pas la réponse pour le moment. Touchez le bouton vert ci-dessous pour parler à une personne sur WhatsApp.';
 const YAA_KB = [
   { keys:['bonjour','salut','hello','coucou','bonsoir'], answer:'Bonjour ! Je suis Yaa, l\u2019assistante Yaaden. Posez-moi votre question : réservation, paiement, publication d\u2019un trajet… Je réponds tout de suite.' },
   { keys:['merci'], answer:'Avec plaisir ! Bon voyage avec Yaaden.' },
@@ -451,7 +449,7 @@ function yaaAnswer(q) {
 }
 const YAA_CHIPS = ['Comment réserver ?', 'Comment payer ?', 'Publier un trajet', 'Trajets en ville à Conakry', 'Parler à une personne'];
 function yaaWelcome() {
-  return 'Bonjour ! Je suis Yaa, votre assistante Yaaden. Posez-moi votre question — réservation, paiement, publication d\u2019un trajet — je réponds tout de suite. Et si vous préférez parler à une personne, le bouton WhatsApp est juste en dessous.';
+  return 'Bonjour ! Je suis Yaa. Une question sur un trajet ou un paiement ? Je réponds tout de suite.';
 }
 function chatEl(id) { return document.getElementById(id); }
 function saveChat() { saveJSON(LS_CHAT, chatHistory.slice(-30)); }

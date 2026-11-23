@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  },
+  "description": "Yaaden — covoiturage en Guinée (application Android, Capacitor). Un service Digifind.",
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "sharp": "^0.35.5"
+  },
+  "name": "yaaden",
+  "private": true,
+  "scripts": {
+    "build-apk": "bash scripts/build-apk.sh",
+    "sync": "npx cap sync",
+    "sync-web": "bash scripts/sync-www.sh",
+    "icons": "node scripts/generate-icons.js"
+  },
+  "version": "6.0.0"
+}

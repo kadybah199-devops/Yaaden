@@ -9,6 +9,11 @@ const CONAKRY_PLACES = ['Kaloum','Dixinn','Ratoma','Matam','Matoto','Kipé','Tao
 const LS_TRIPS = 'yaaden_my_trips_v1';
 const LS_BOOKINGS = 'yaaden_bookings_v1';
 const LS_PROFILE = 'yaaden_profile_v1';
+const LS_CHAT = 'yaaden_chat_v1';
+const LS_CHAT_SEEN = 'yaaden_chat_seen_v1';
+/* WhatsApp d'assistance Yaaden (équipe Digifind à Conakry). */
+const SUPPORT_WA = '224620685645';
+const SUPPORT_WA_MSG = 'Bonjour, j\u2019ai besoin d\u2019aide sur Yaaden.';
 const AVATAR_COLORS = ['#0E2A47','#00B894','#E67E22','#8E44AD','#2E86DE','#C0392B','#16A085','#D35400'];
 
 /* Trajets de démo : day = décalage en jours à partir d'aujourd'hui (toujours futurs). */
@@ -152,6 +157,7 @@ function tripCardHTML(trip) {
   return '<button type="button" class="trip-card' + (trip.mine ? ' mine' : '') + '" data-trip="' + esc(trip.id) + '">' +
     '<div class="trip-top">' +
       '<div><div class="trip-route">' + esc(trip.from) + ' <span class="arrow">→</span> ' + esc(trip.to) + '</div>' +
+      '<div class="route-visual" aria-hidden="true"><span class="rv-dot"></span><span class="rv-line"></span><span class="rv-dot end"></span></div>' +
       '<div class="trip-date"><svg class="ic"><use href="#i-cal"/></svg>' + esc(prettyDate(trip.date)) +
       ' · <svg class="ic"><use href="#i-clock"/></svg>' + esc(trip.time) + '</div></div>' +
       '<div class="trip-price"><b>' + esc(fmtGNF(trip.price)) + '</b><span>par place</span></div>' +
@@ -397,6 +403,115 @@ function confirmBooking() {
   toast('Réservation confirmée : ' + detailSeats + ' place' + (detailSeats > 1 ? 's' : '') + ' — ' + trip.from + ' → ' + trip.to + ' !');
 }
 
+/* ---------- Assistante Yaa : aide instantanée + WhatsApp ---------- */
+let chatHistory = loadJSON(LS_CHAT, []);
+let chatOpen = false;
+let yaaTimer = null;
+
+function norm(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+const YAA_FALLBACK = 'Je n\u2019ai pas la réponse à cette question pour le moment. Touchez le bouton vert ci-dessous pour parler à une personne de l\u2019équipe Yaaden sur WhatsApp — on vous répond rapidement. Vous pouvez aussi essayer : « Comment réserver ? », « Comment payer ? » ou « Comment publier un trajet ? ».';
+const YAA_KB = [
+  { keys:['bonjour','salut','hello','coucou','bonsoir'], answer:'Bonjour ! Je suis Yaa, l\u2019assistante Yaaden. Posez-moi votre question : réservation, paiement, publication d\u2019un trajet… Je réponds tout de suite.' },
+  { keys:['merci'], answer:'Avec plaisir ! Bon voyage avec Yaaden.' },
+  { keys:['reserver','reservation','booker','prendre une place','prendre place','je veux aller'], answer:'Pour réserver : cherchez votre trajet, touchez sa carte, choisissez le nombre de places puis « Confirmer la réservation ». Vous retrouvez tout dans « Mes trajets », et vous pouvez écrire au conducteur sur WhatsApp.' },
+  { keys:['publier','publie','proposer un trajet','offrir une place','jai une voiture','j ai une voiture'], answer:'Pour publier un trajet : touchez « Publier » en bas de l\u2019écran, choisissez Entre villes ou En ville, puis indiquez départ, arrivée, date, heure, places et prix. C\u2019est gratuit et vos passagers vous paient directement.' },
+  { keys:['payer','paiement','paye','orange money','especes','cash','argent'], answer:'Le paiement se fait directement avec le conducteur, au moment du trajet : en espèces ou via Orange Money. Yaaden ne prend aucune commission pour le moment.' },
+  { keys:['annuler','annulation','supprimer ma reservation','supprimer reservation'], answer:'Pour annuler : allez dans « Mes trajets », puis touchez « Annuler » à côté de votre réservation. Pensez à prévenir le conducteur sur WhatsApp.' },
+  { keys:['prix','tarif','cout','combien','cher'], answer:'Les prix sont fixés par les conducteurs. En ville à Conakry : 20 000 à 60 000 GNF par place. Entre villes, par exemple Conakry → Kindia dès 140 000 GNF.' },
+  { keys:['en ville','conakry','quartier','heures de pointe','pointe','kipe','bambeto','kaloum','cosa','matoto','ratoma'], answer:'Oui, Yaaden couvre aussi Conakry ! Choisissez « En ville · Conakry » dans la recherche pour trouver des places entre quartiers : Kipé, Cosa, Bambéto, Kaloum… C\u2019est idéal aux heures de pointe, de 7h à 9h et de 17h à 19h.' },
+  { keys:['entre villes','long trajet','voyage','kindia','labe','kankan','mamou','boke','voyager'], answer:'Pour les longs trajets, choisissez « Entre villes » : Conakry → Kindia, Labé, Kankan, Mamou, Boké et plus. Les conducteurs partent avec des places libres — réservez la vôtre.' },
+  { keys:['contacter','joindre','parler au conducteur','numero','telephone conducteur','whatsapp conducteur'], answer:'Pour joindre un conducteur : ouvrez la fiche de son trajet et touchez le bouton WhatsApp. Vous pouvez lui écrire avant même de réserver.' },
+  { keys:['securite','sur','confiance','dangereux','risque','arnaque'], answer:'Chaque conducteur affiche sa note et son nombre de trajets. Vérifiez-les, regardez le véhicule indiqué et échangez sur WhatsApp avant le départ. En cas de problème, écrivez à l\u2019équipe Yaaden sur WhatsApp avec le bouton vert ci-dessous.' },
+  { keys:['profil','compte','inscrire','inscription','creer un compte','donnees'], answer:'Pas de compte à créer : remplissez simplement votre profil dans l\u2019onglet « Profil » (nom, téléphone WhatsApp, véhicule). Vos données restent sur votre téléphone.' },
+  { keys:['gratuit','commission','frais'], answer:'Yaaden est gratuit pour le moment : aucune commission sur vos trajets, le paiement va directement au conducteur.' },
+  { keys:['bagage','valise','sac'], answer:'Regardez les options sur la carte du trajet : si « Bagages acceptés » est affiché, le conducteur a de la place pour vos bagages.' },
+  { keys:['humain','personne','equipe','assistance','aide','quelquun'], answer:'Bien sûr : touchez le bouton vert « Parler à une personne sur WhatsApp » ci-dessous, l\u2019équipe Yaaden vous répond rapidement.' },
+  { keys:['yaaden','cest quoi','comment ca marche','marche'], answer:'Yaaden, c\u2019est le covoiturage en Guinée : des conducteurs qui partent déjà dans votre direction partagent leurs places libres. Cherchez, réservez, payez au conducteur en espèces ou Orange Money.' }
+];
+function yaaAnswer(q) {
+  const n = norm(q);
+  let best = null, bestScore = 0;
+  YAA_KB.forEach(function (entry) {
+    let score = 0;
+    entry.keys.forEach(function (k) { if (n.indexOf(k) !== -1) score++; });
+    if (score > bestScore) { bestScore = score; best = entry; }
+  });
+  return best ? best.answer : YAA_FALLBACK;
+}
+const YAA_CHIPS = ['Comment réserver ?', 'Comment payer ?', 'Publier un trajet', 'Trajets en ville à Conakry', 'Parler à une personne'];
+function yaaWelcome() {
+  return 'Bonjour ! Je suis Yaa, votre assistante Yaaden. Posez-moi votre question — réservation, paiement, publication d\u2019un trajet — je réponds tout de suite. Et si vous préférez parler à une personne, le bouton WhatsApp est juste en dessous.';
+}
+function chatEl(id) { return document.getElementById(id); }
+function saveChat() { saveJSON(LS_CHAT, chatHistory.slice(-30)); }
+function renderChatMsg(role, text) {
+  const box = chatEl('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'msg-user' : 'msg-bot');
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+function openChat() {
+  chatOpen = true;
+  chatEl('chat-panel').hidden = false;
+  chatEl('chat-greeting').hidden = true;
+  chatEl('chat-fab-dot').hidden = true;
+  try { localStorage.setItem(LS_CHAT_SEEN, '1'); } catch (e) {}
+  if (!chatHistory.length) {
+    chatHistory.push({ role:'bot', text: yaaWelcome() });
+    saveChat();
+  }
+  const box = chatEl('chat-messages');
+  box.innerHTML = '';
+  chatHistory.forEach(function (m) { renderChatMsg(m.role, m.text); });
+}
+function closeChat() {
+  chatOpen = false;
+  chatEl('chat-panel').hidden = true;
+}
+function toggleChat() { chatOpen ? closeChat() : openChat(); }
+function yaaReply(q) {
+  const box = chatEl('chat-messages');
+  const t = document.createElement('div');
+  t.className = 'msg msg-bot typing';
+  t.innerHTML = '<i></i><i></i><i></i>';
+  box.appendChild(t);
+  box.scrollTop = box.scrollHeight;
+  clearTimeout(yaaTimer);
+  yaaTimer = setTimeout(function () {
+    t.remove();
+    const a = yaaAnswer(q);
+    chatHistory.push({ role:'bot', text: a });
+    saveChat();
+    renderChatMsg('bot', a);
+  }, 800);
+}
+function sendChat(text) {
+  const q = (text || '').trim();
+  if (!q) return;
+  chatHistory.push({ role:'user', text: q });
+  saveChat();
+  renderChatMsg('user', q);
+  yaaReply(q);
+}
+function renderChatChips() {
+  chatEl('chat-chips').innerHTML = YAA_CHIPS.map(function (c) {
+    return '<button type="button" class="chat-chip" data-chip="' + esc(c) + '">' + esc(c) + '</button>';
+  }).join('');
+}
+/* Petite bulle d'invitation quelques secondes après la première visite. */
+function scheduleGreeting() {
+  let seen = null;
+  try { seen = localStorage.getItem(LS_CHAT_SEEN); } catch (e) {}
+  if (seen) return;
+  setTimeout(function () {
+    if (!chatOpen) chatEl('chat-greeting').hidden = false;
+  }, 5000);
+}
+
 /* ---------- Navigation ---------- */
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
@@ -427,7 +542,10 @@ function fillCitySelect(select, selected, list) {
     return '<option value="' + c + '"' + (c === selected ? ' selected' : '') + '>' + c + '</option>';
   }).join('');
 }
+let __initDone = false;
 function init() {
+  if (__initDone) return; /* ne jamais brancher les écouteurs deux fois */
+  __initDone = true;
   fillCitySelect(document.getElementById('from'), 'Conakry', CITIES);
   fillCitySelect(document.getElementById('to'), 'Kindia', CITIES);
   fillCitySelect(document.getElementById('pub-from'), 'Conakry', CITIES);
@@ -579,7 +697,7 @@ function init() {
   /* Feuille détail */
   document.getElementById('detail-close').addEventListener('click', closeDetail);
   document.getElementById('sheet-backdrop').addEventListener('click', closeDetail);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDetail(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDetail(); closeChat(); } });
   document.getElementById('detail-body').addEventListener('click', function (e) {
     const step = e.target.closest('[data-detail-step]');
     if (step) {
@@ -598,6 +716,32 @@ function init() {
       toast('Réservation annulée.');
     }
   });
+
+  /* Appel aux conducteurs (bannière de l'accueil) */
+  document.getElementById('driver-cta-btn').addEventListener('click', function () { showScreen('publish'); });
+
+  /* Assistante Yaa */
+  renderChatChips();
+  chatEl('chat-wa').href = waLink(SUPPORT_WA, SUPPORT_WA_MSG);
+  chatEl('chat-fab').addEventListener('click', toggleChat);
+  chatEl('chat-close').addEventListener('click', closeChat);
+  chatEl('chat-greeting-close').addEventListener('click', function (e) {
+    e.stopPropagation();
+    chatEl('chat-greeting').hidden = true;
+  });
+  chatEl('chat-greeting').addEventListener('click', openChat);
+  chatEl('chat-chips').addEventListener('click', function (e) {
+    const chip = e.target.closest('.chat-chip');
+    if (chip) sendChat(chip.dataset.chip);
+  });
+  chatEl('chat-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const input = chatEl('chat-input');
+    sendChat(input.value);
+    input.value = '';
+    input.focus();
+  });
+  scheduleGreeting();
 
   /* Service worker (hors-ligne) */
   if ('serviceWorker' in navigator) {

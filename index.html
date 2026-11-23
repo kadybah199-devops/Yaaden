@@ -59,6 +59,22 @@
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2 L20 5.5 V11 c0 5-3.5 8.5-8 10 -4.5-1.5-8-5-8-10 V5.5 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 12 l2.5 2.5 L15.5 9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4 h4 l2 5 -2.5 1.5 a12 12 0 0 0 5 5 L15 13 l5 2 v4 a2 2 0 0 1-2 2 A16 16 0 0 1 3 6 a2 2 0 0 1 2-2 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
     <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6 l6 6 -6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12 a8 8 0 0 1-8 8 H4 l2.3-2.7 A8 8 0 1 1 21 12 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="9" cy="12" r="1.1" fill="currentColor"/><circle cx="12.5" cy="12" r="1.1" fill="currentColor"/><circle cx="16" cy="12" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 L10 14 M21 3 L14 21 l-4-7 -7-4 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="yaa-avatar" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="30" fill="url(#yaaden-grad)"/>
+      <path d="M14 30 a18 18 0 0 1 36 0" fill="none" stroke="#FFC531" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="32" cy="36" r="16" fill="#B07A4E"/>
+      <path d="M16 36 a16 16 0 0 1 32 0 Q40 30 32 32.5 Q24 30 16 36 Z" fill="#241A12"/>
+      <circle cx="26" cy="36" r="2.2" fill="#1E140D"/>
+      <circle cx="38" cy="36" r="2.2" fill="#1E140D"/>
+      <path d="M26.5 43 q5.5 4.5 11 0" fill="none" stroke="#1E140D" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="14" cy="36" r="4" fill="#00B894"/>
+      <circle cx="50" cy="36" r="4" fill="#00B894"/>
+      <path d="M50 40 q0 8 -8 9" fill="none" stroke="#00B894" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="41" cy="49" r="2.4" fill="#00B894"/>
+      <circle cx="52" cy="13" r="3" fill="#FFC531"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -80,8 +96,15 @@
     <!-- ================= ÉCRAN : RECHERCHE ================= -->
     <section class="screen active" id="screen-search">
       <div class="hero">
-        <h1>Voyagez ensemble,<br>payez moins cher.</h1>
-        <p>En ville à Conakry ou entre villes — Kindia, Labé, Kankan et partout en Guinée.</p>
+        <span class="hero-eyebrow"><span class="live-dot"></span> Heures de pointe · 7h–9h &amp; 17h–19h</span>
+        <h1>Fini d'attendre un taxi.<br>Trouvez votre place.</h1>
+        <p>Des conducteurs partent déjà dans votre direction — Kipé, Cosa, Bambéto, Kaloum… Montez avec eux, payez moins cher.</p>
+        <div class="hero-road" aria-hidden="true"><span class="road-car"><svg class="ic"><use href="#i-car"/></svg></span></div>
+        <div class="hero-stats">
+          <span><b>26</b> trajets cette semaine</span>
+          <span><b>11</b> villes</span>
+          <span><b>dès 20 000 GNF</b> en ville</span>
+        </div>
       </div>
 
       <form class="search-card" id="search-form" autocomplete="off">
@@ -118,6 +141,30 @@
           <svg class="ic"><use href="#i-search"/></svg> Rechercher un trajet
         </button>
       </form>
+
+      <div class="section-head">
+        <h2>Comment ça marche ?</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><svg class="ic"><use href="#i-search"/></svg><strong>Cherchez</strong><span>Votre trajet, en ville ou entre villes.</span></div>
+        <div class="step"><span class="step-num">2</span><svg class="ic"><use href="#i-ticket"/></svg><strong>Réservez</strong><span>Votre place en quelques secondes.</span></div>
+        <div class="step"><span class="step-num">3</span><svg class="ic"><use href="#i-money"/></svg><strong>Payez</strong><span>Au conducteur : espèces ou Orange Money.</span></div>
+      </div>
+
+      <div class="why">
+        <h2>Pourquoi Yaaden ?</h2>
+        <p>Aux heures de pointe, les taxis sont pleins et certains axes n'en ont presque pas. Pourtant, des voitures partent dans la même direction avec des places vides.</p>
+        <div class="why-points">
+          <span><svg class="ic"><use href="#i-clock"/></svg> Moins d'attente aux heures de pointe</span>
+          <span><svg class="ic"><use href="#i-money"/></svg> Moins cher qu'un taxi seul</span>
+          <span><svg class="ic"><use href="#i-seat"/></svg> Des voisins qui vont au même endroit</span>
+        </div>
+      </div>
+
+      <div class="driver-cta">
+        <div><strong>Vous avez une voiture ?</strong><span>Publiez vos places libres et réduisez vos frais de route.</span></div>
+        <button class="btn btn-sun btn-small" id="driver-cta-btn" type="button">Publier un trajet</button>
+      </div>
 
       <div class="section-head">
         <h2>Trajets populaires</h2>
@@ -266,7 +313,7 @@
       </div>
       <footer class="app-footer">
         <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
-        <p>Yaaden — version 1.0<br>Un service de <strong>Digifind</strong></p>
+        <p>Yaaden — version 2.0<br>Un service de <strong>Digifind</strong></p>
       </footer>
     </section>
   </main>
@@ -293,6 +340,33 @@
     <div class="sheet-handle"></div>
     <button class="sheet-close" id="detail-close" type="button" aria-label="Fermer"><svg class="ic"><use href="#i-x"/></svg></button>
     <div class="sheet-body" id="detail-body"></div>
+  </div>
+
+  <!-- ====== Assistante Yaa : aide & assistance ====== -->
+  <button class="chat-fab" id="chat-fab" type="button" aria-label="Aide et assistance — parler à Yaa">
+    <svg class="chat-fab-avatar" aria-hidden="true"><use href="#yaa-avatar"/></svg>
+    <span class="chat-fab-dot" id="chat-fab-dot"></span>
+  </button>
+  <div class="chat-greeting" id="chat-greeting" hidden>
+    <button class="chat-greeting-close" id="chat-greeting-close" type="button" aria-label="Fermer">×</button>
+    <strong>Besoin d'aide ?</strong>
+    <span>Yaa, votre assistante Yaaden, répond en quelques secondes.</span>
+  </div>
+  <div class="chat-panel" id="chat-panel" hidden role="dialog" aria-label="Assistance Yaaden">
+    <div class="chat-header">
+      <svg class="chat-header-avatar" aria-hidden="true"><use href="#yaa-avatar"/></svg>
+      <div class="chat-header-text"><strong>Yaa</strong><span>Assistante Yaaden · <span class="chat-online">En ligne</span></span></div>
+      <button class="chat-close" id="chat-close" type="button" aria-label="Fermer l'assistance"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+    <div class="chat-chips" id="chat-chips"></div>
+    <form class="chat-input-row" id="chat-form" autocomplete="off">
+      <input type="text" id="chat-input" placeholder="Écrivez votre question…" maxlength="300" aria-label="Votre question">
+      <button class="chat-send" type="submit" aria-label="Envoyer"><svg class="ic"><use href="#i-send"/></svg></button>
+    </form>
+    <a class="chat-wa" id="chat-wa" href="https://wa.me/224620685645?text=Bonjour%2C%20j%27ai%20besoin%20d%27aide%20sur%20Yaaden." target="_blank" rel="noopener">
+      <svg class="ic"><use href="#i-wa"/></svg> Parler à une personne sur WhatsApp
+    </a>
   </div>
 
   <!-- ====== Toast ====== -->

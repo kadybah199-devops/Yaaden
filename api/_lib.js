@@ -80,15 +80,21 @@ export function readBody(req) {
   return body;
 }
 
-/* Lit un fichier JSON du magasin ; null s'il n'existe pas ou est illisible. */
+/* Lit un fichier JSON du magasin ; null s'il n'existe pas ou est illisible.
+   Le magasin Blob met parfois une seconde à rendre une écriture visible :
+   on réessaie 3 fois avant de conclure à l'absence (sinon, une décision
+   prise juste après un envoi échouerait avec « introuvable »). */
 export async function getJson(pathname, t) {
-  try {
-    const result = await get(pathname, { access: 'private', token: t });
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text);
-  } catch (e) {
-    return null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const result = await get(pathname, { access: 'private', token: t });
+      const text = await new Response(result.stream).text();
+      return JSON.parse(text);
+    } catch (e) {
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 400));
+    }
   }
+  return null;
 }
 
 export async function putJson(pathname, obj, t) {

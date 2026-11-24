@@ -190,6 +190,7 @@
         <p>Vous avez des places libres ? Partagez votre trajet et vos frais de route.</p>
       </div>
       <form class="form-card" id="publish-form" autocomplete="off">
+        <div class="verify-note" id="publish-verify-note" hidden></div>
         <div class="segmented" role="tablist" aria-label="Type de trajet">
           <button type="button" class="seg-btn active" data-pub-type="ville" role="tab">En ville · Conakry</button>
           <button type="button" class="seg-btn" data-pub-type="inter" role="tab">Entre villes</button>
@@ -287,12 +288,12 @@
         <button type="submit" class="btn btn-primary btn-big">
           <svg class="ic"><use href="#i-check"/></svg> Enregistrer mon profil
         </button>
-        <p class="form-note">Vos données restent sur votre téléphone.</p>
+        <p class="form-note">Vos trajets publiés et vos réservations sont visibles par les autres utilisateurs de Yaaden.</p>
       </form>
 
       <div class="form-card" id="verify-card">
         <h2 class="verify-title"><svg class="ic"><use href="#i-shield"/></svg> Vérification conducteur</h2>
-        <p class="verify-sub">Faites vérifier votre identité pour rassurer vos passagers : vos trajets affichent le badge « Vérifié ».</p>
+        <p class="verify-sub">La vérification est obligatoire pour publier un trajet : vos passagers voient le badge « Vérifié ».</p>
         <div id="verify-status"></div>
         <form id="verify-form" autocomplete="off">
           <label class="field">
@@ -321,7 +322,7 @@
       </div>
       <footer class="app-footer">
         <img src="assets/digifind-logo.svg" alt="Digifind — Transformation digitale &amp; IA" class="footer-logo">
-        <p>Yaaden — version 6.0<br>Un service de <strong>Digifind</strong></p>
+        <p>Yaaden — version 7.0<br>Un service de <strong>Digifind</strong></p>
       </footer>
     </section>
   </main>

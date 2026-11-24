@@ -81,13 +81,14 @@ export function readBody(req) {
 }
 
 /* Lit un fichier JSON du magasin ; null s'il n'existe pas ou est illisible.
-   Le magasin Blob met parfois une seconde à rendre une écriture visible :
-   on réessaie 3 fois avant de conclure à l'absence (sinon, une décision
-   prise juste après un envoi échouerait avec « introuvable »). */
+   IMPORTANT : `useCache: false` est obligatoire — sinon `get()` lit une
+   copie en cache du CDN et renvoie l'ancienne version après une réécriture
+   (une vérification validée restait « en attente », un trajet annulé restait
+   « actif »). On réessaie 3 fois avant de conclure à l'absence. */
 export async function getJson(pathname, t) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const result = await get(pathname, { access: 'private', token: t });
+      const result = await get(pathname, { access: 'private', token: t, useCache: false });
       const text = await new Response(result.stream).text();
       return JSON.parse(text);
     } catch (e) {
@@ -102,6 +103,7 @@ export async function putJson(pathname, obj, t) {
     access: 'private',
     contentType: 'application/json',
     allowOverwrite: true,
+    cacheControlMaxAge: 0,
     token: t,
   });
 }

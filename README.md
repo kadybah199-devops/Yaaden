@@ -46,9 +46,11 @@ Un service de **Digifind** — transformation digitale & IA.
   trajets. Actualisation automatique des données toutes les minutes.
 - Limites connues (v1 du backend) : pas de comptes (identifiant par
   téléphone), pas de limitation de débit, réservations simultanées sur les
-  dernières places non verrouillées (risque négligeable à ce volume), et le
-  magasin Blob met parfois une seconde à rendre une écriture visible
-  (les lectures réessaient 3 fois avant de conclure à l'absence).
+  dernières places non verrouillées (risque négligeable à ce volume).
+  Piège Blob (corrigé) : `get()` lit par défaut une copie en cache du CDN —
+  les lectures passent `useCache: false` et les écritures
+  `cacheControlMaxAge: 0`, sinon une réécriture (vérification validée,
+  trajet annulé) restait invisible.
 
 ## Nouveautés (v6 — tarifs bas, priorité ville, écran aéré)
 

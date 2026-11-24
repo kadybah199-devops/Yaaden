@@ -19,6 +19,35 @@ Un service de **Digifind** — transformation digitale & IA.
 - **Paiement** : espèces ou Orange Money, directement entre passager et conducteur.
 - **PWA installable** : manifest + service worker, fonctionne hors connexion après la première visite.
 
+## Nouveautés (v7 — backend partagé)
+
+- **Trajets, réservations, alertes et vérifications partagés** : un trajet
+  publié sur un téléphone est visible par tous les autres. Fonctions
+  serverless Vercel (`api/`) + magasin Blob privé `yaaden-data` (un fichier
+  JSON par trajet, réservation et demande de vérification), comme Seedee.
+  - `GET/POST/DELETE /api/rides` — trajets actifs à venir, publication,
+    annulation (conducteur) ou suppression (admin).
+  - `GET/POST/DELETE /api/bookings` — réservations (places décrémentées puis
+    rendues à l'annulation).
+  - `GET/POST /api/trip-status` — signal d'arrivée (« j'arrive », « je suis
+    arrivé ») visible par les passagers.
+  - `GET/POST/DELETE /api/verifications` — demandes de vérification et
+    décisions de l'équipe (code admin).
+- **Publication réservée aux conducteurs vérifiés** : pas de publication sans
+  identité vérifiée (pièce + selfie contrôlés sur WhatsApp sous 24 h).
+  Les passagers cherchent et réservent librement.
+- **Page admin privée** (`admin.html`, code à 6 chiffres, non référencée) :
+  valider ou refuser les vérifications, supprimer un trajet.
+- **Hors ligne** : sans connexion, l'appli continue avec la démo et les
+  données locales ; un trajet publié hors ligne est partagé automatiquement
+  dès que la connexion revient. Le service worker ne met jamais les API en
+  cache (données toujours fraîches).
+- **Trajets de démo étiquetés « Exemple »** pour les distinguer des vrais
+  trajets. Actualisation automatique des données toutes les minutes.
+- Limites connues (v1 du backend) : pas de comptes (identifiant par
+  téléphone), pas de limitation de débit, réservations simultanées sur les
+  dernières places non verrouillées (risque négligeable à ce volume).
+
 ## Nouveautés (v6 — tarifs bas, priorité ville, écran aéré)
 
 - **Tarifs baissés** : en ville à Conakry, 10 000 – 25 000 GNF par place
@@ -91,8 +120,11 @@ Un service de **Digifind** — transformation digitale & IA.
 
 ## Technique
 
-- 100 % statique : HTML / CSS / JS, aucune étape de build, aucun backend pour cette v2.
-- Données de démo réalistes + `localStorage` (trajets publiés, réservations, profil, historique du chat Yaa).
+- 100 % statique pour l'interface (HTML / CSS / JS, aucune étape de build) +
+  fonctions serverless Vercel (`api/`, Node + `@vercel/blob`) et magasin Blob
+  privé `yaaden-data` pour les données partagées ; `package.json` à la racine
+  déclare la dépendance.
+- Données de démo réalistes + `localStorage` (trajets publiés, réservations, profil, historique du chat Yaa) ; identifiant stable par téléphone (`yaaden_device_id_v1`) sans compte.
 - Déployé sur Vercel (équipe Digifind) par envoi direct des fichiers ; le projet Vercel
   n'est pas encore relié au dépôt GitHub, donc un push ne redéploie pas tout seul — le
   déploiement se relance à la main après chaque push.

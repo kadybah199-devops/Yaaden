@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Yaaden — Administration (privé)</title>
+<meta name="description" content="Page privée Yaaden : vérifications des conducteurs et trajets publiés.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Nunito", system-ui, sans-serif; background: #0B1F33; color: #F2F7FA; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+  .sub { color: #9FB3C8; margin: 0 0 20px; font-size: .95rem; }
+  .card { background: #14324D; border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 0 #050F1A; }
+  label { display: block; font-weight: 700; margin-bottom: 6px; font-size: .9rem; }
+  input[type="password"], input[type="text"] { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #24486B; background: #0B1F33; color: #F2F7FA; font-size: 1rem; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 10px 18px; font-weight: 800; font-size: .95rem; cursor: pointer; }
+  .btn-mint { background: #3DDC97; color: #06281A; }
+  .btn-outline { background: transparent; color: #F2F7FA; border: 2px solid #3DDC97; }
+  .btn-danger { background: transparent; color: #FF8A8A; border: 2px solid #FF8A8A; }
+  .btn-small { padding: 7px 13px; font-size: .85rem; }
+  .btn-wa { background: #25D366; color: #06281A; }
+  .note { color: #9FB3C8; font-size: .9rem; margin: 8px 0 0; }
+  .tabs { display: flex; gap: 8px; margin: 0 0 16px; }
+  .tab { flex: 1; text-align: center; padding: 11px; border-radius: 12px; background: #14324D; color: #9FB3C8; font-weight: 800; cursor: pointer; border: 0; font-size: .95rem; }
+  .tab.active { background: #3DDC97; color: #06281A; }
+  .item-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .item-head strong { font-size: 1.05rem; }
+  .item-date { color: #9FB3C8; font-size: .85rem; }
+  .item-line { margin: 5px 0; color: #D6E4EF; }
+  .item-line a { color: #3DDC97; font-weight: 700; }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .8rem; font-weight: 800; }
+  .pill.pending { background: #FFE9A8; color: #5C4A00; }
+  .pill.verified { background: #3DDC97; color: #06281A; }
+  .pill.rejected { background: #FF8A8A; color: #4A0000; }
+  .pill.cancelled { background: #5B7186; color: #F2F7FA; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .head-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .head-row p { margin: 0; font-weight: 700; }
+  .hidden { display: none !important; }
+  .empty { text-align: center; color: #9FB3C8; padding: 24px 0; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Yaaden — Administration</h1>
+  <p class="sub">Vérifications des conducteurs et trajets publiés. Page privée.</p>
+
+  <div id="code-gate" class="card">
+    <label for="admin-code">Code d'accès</label>
+    <input type="password" id="admin-code" inputmode="numeric" autocomplete="off" placeholder="Code à 6 chiffres">
+    <div style="margin-top:12px"><button type="button" class="btn btn-mint" id="unlock">Entrer</button></div>
+    <p class="note" id="code-status" role="status"></p>
+  </div>
+
+  <div id="admin-zone" class="hidden">
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="verifs">Vérifications</button>
+      <button type="button" class="tab" data-tab="rides">Trajets</button>
+    </div>
+    <div class="head-row">
+      <p id="list-count"></p>
+      <button type="button" class="btn btn-outline btn-small" id="refresh">Actualiser</button>
+    </div>
+    <div id="list"></div>
+    <p class="note" id="list-status" role="status"></p>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var codeGate = document.getElementById("code-gate");
+  var adminZone = document.getElementById("admin-zone");
+  var codeInput = document.getElementById("admin-code");
+  var codeStatus = document.getElementById("code-status");
+  var listEl = document.getElementById("list");
+  var listCount = document.getElementById("list-count");
+  var listStatus = document.getElementById("list-status");
+  var code = sessionStorage.getItem("yaaden-admin-code") || "";
+  var tab = "verifs";
+
+  function esc(s) {
+    return String(s === undefined || s === null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+  function waNum(tel) {
+    var n = String(tel || "").replace(/[^0-9]/g, "");
+    if (!n) return "";
+    return n.startsWith("224") ? n : "224" + n.replace(/^0/, "");
+  }
+  function headers() { return { "x-admin-code": code }; }
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({}, opts.headers || {}, headers());
+    return fetch(path, opts);
+  }
+
+  function verifCard(v) {
+    var pill = v.status === "verified" ? '<span class="pill verified">Vérifié</span>'
+      : v.status === "rejected" ? '<span class="pill rejected">Refusé</span>'
+      : '<span class="pill pending">En attente</span>';
+    var wa = waNum(v.driver_phone);
+    var html = '<article class="card"><div class="item-head"><strong>' + esc(v.driver_name || "Sans nom") + '</strong><span class="item-date">' + esc(fmtDate(v.submitted_at)) + '</span></div>';
+    html += '<p class="item-line">' + pill + ' · Plaque : <b>' + esc(v.plate || "—") + '</b></p>';
+    html += '<p class="item-line">Tél. : ' + (wa ? '<a href="https://wa.me/' + wa + '" target="_blank" rel="noopener">' + esc(v.driver_phone) + '</a>' : esc(v.driver_phone || "")) + '</p>';
+    if (v.note) html += '<p class="item-line">Note : ' + esc(v.note) + '</p>';
+    html += '<div class="actions">';
+    if (v.status === "pending") {
+      html += '<button type="button" class="btn btn-mint btn-small" data-decide="verified" data-driver="' + esc(v.driver_id) + '">Vérifier</button>';
+      html += '<button type="button" class="btn btn-danger btn-small" data-decide="rejected" data-driver="' + esc(v.driver_id) + '">Refuser</button>';
+    }
+    html += '<button type="button" class="btn btn-outline btn-small" data-del-verif="' + esc(v.driver_id) + '">Supprimer</button></div></article>';
+    return html;
+  }
+
+  function rideCard(r) {
+    var pill = r.status === "cancelled" ? '<span class="pill cancelled">Annulé</span>'
+      : (r.verified ? '<span class="pill verified">Vérifié</span>' : '<span class="pill pending">Non vérifié</span>');
+    var wa = waNum(r.phone);
+    var html = '<article class="card"><div class="item-head"><strong>' + esc(r.from) + ' → ' + esc(r.to) + '</strong><span class="item-date">' + esc(r.date) + ' · ' + esc(r.time) + '</span></div>';
+    html += '<p class="item-line">' + pill + ' · ' + esc(r.price).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + ' GNF · ' + r.seats_left + '/' + r.seats + ' places</p>';
+    html += '<p class="item-line">Conducteur : ' + esc(r.driver) + (wa ? ' — <a href="https://wa.me/' + wa + '" target="_blank" rel="noopener">' + esc(r.phone) + '</a>' : '') + (r.plate ? ' · Plaque : ' + esc(r.plate) : '') + '</p>';
+    html += '<div class="actions"><button type="button" class="btn btn-danger btn-small" data-del-ride="' + esc(r.id) + '">Supprimer le trajet</button></div></article>';
+    return html;
+  }
+
+  function load() {
+    listStatus.textContent = "Chargement…";
+    listEl.innerHTML = "";
+    if (tab === "verifs") {
+      api("/api/verifications").then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); }).then(function (x) {
+        if (!x.d.ok) { listStatus.textContent = x.d.error || "Erreur de chargement."; return; }
+        var items = x.d.verifications || [];
+        listCount.textContent = items.length + " demande" + (items.length > 1 ? "s" : "");
+        listEl.innerHTML = items.length ? items.map(verifCard).join("") : '<div class="empty">Aucune demande de vérification.</div>';
+        listStatus.textContent = "";
+      }).catch(function () { listStatus.textContent = "Impossible de charger. Vérifiez la connexion."; });
+    } else {
+      api("/api/rides?all=1").then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); }).then(function (x) {
+        if (!x.d.ok) { listStatus.textContent = x.d.error || "Erreur de chargement."; return; }
+        var items = x.d.rides || [];
+        listCount.textContent = items.length + " trajet" + (items.length > 1 ? "s" : "");
+        listEl.innerHTML = items.length ? items.map(rideCard).join("") : '<div class="empty">Aucun trajet publié.</div>';
+        listStatus.textContent = "";
+      }).catch(function () { listStatus.textContent = "Impossible de charger. Vérifiez la connexion."; });
+    }
+  }
+
+  function unlock() {
+    code = codeInput.value.trim();
+    if (!code) { codeStatus.textContent = "Entrez le code."; return; }
+    codeStatus.textContent = "Vérification…";
+    api("/api/verifications").then(function (r) {
+      if (r.status === 401) { codeStatus.textContent = "Code incorrect."; return; }
+      if (!r.ok) { codeStatus.textContent = "Erreur de connexion, réessayez."; return; }
+      sessionStorage.setItem("yaaden-admin-code", code);
+      codeGate.classList.add("hidden");
+      adminZone.classList.remove("hidden");
+      load();
+    }).catch(function () { codeStatus.textContent = "Erreur de connexion, réessayez."; });
+  }
+
+  document.getElementById("unlock").addEventListener("click", unlock);
+  codeInput.addEventListener("keydown", function (e) { if (e.key === "Enter") unlock(); });
+  document.getElementById("refresh").addEventListener("click", load);
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("active"); });
+      t.classList.add("active");
+      tab = t.dataset.tab;
+      load();
+    });
+  });
+  listEl.addEventListener("click", function (e) {
+    var decide = e.target.closest("[data-decide]");
+    if (decide) {
+      var label = decide.dataset.decide === "verified" ? "Vérifier ce conducteur ? Il pourra publier des trajets." : "Refuser cette demande ?";
+      if (!window.confirm(label)) return;
+      api("/api/verifications?action=decide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ driver_id: decide.dataset.driver, decision: decide.dataset.decide }) })
+        .then(function (r) { return r.json(); }).then(function (d) {
+          listStatus.textContent = d.ok ? "Décision enregistrée." : (d.error || "Erreur.");
+          load();
+        }).catch(function () { listStatus.textContent = "Erreur de connexion."; });
+      return;
+    }
+    var delV = e.target.closest("[data-del-verif]");
+    if (delV) {
+      if (!window.confirm("Supprimer cette demande de vérification ?")) return;
+      api("/api/verifications?driver_id=" + encodeURIComponent(delV.dataset.delVerif), { method: "DELETE" })
+        .then(function (r) { return r.json(); }).then(function (d) {
+          listStatus.textContent = d.ok ? "Demande supprimée." : (d.error || "Erreur.");
+          load();
+        }).catch(function () { listStatus.textContent = "Erreur de connexion."; });
+      return;
+    }
+    var delR = e.target.closest("[data-del-ride]");
+    if (delR) {
+      if (!window.confirm("Supprimer ce trajet définitivement (et ses réservations) ?")) return;
+      api("/api/rides?id=" + encodeURIComponent(delR.dataset.delRide), { method: "DELETE" })
+        .then(function (r) { return r.json(); }).then(function (d) {
+          listStatus.textContent = d.ok ? "Trajet supprimé." : (d.error || "Erreur.");
+          load();
+        }).catch(function () { listStatus.textContent = "Erreur de connexion."; });
+    }
+  });
+
+  if (code) {
+    codeInput.value = code;
+    unlock();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"dependencies":{"@vercel/blob":"^2.9.0"},"description":"Yaaden — covoiturage en Guinée. Site statique + fonctions serverless Vercel (trajets, réservations, alertes d'arrivée, vérifications partagés entre téléphones).","name":"yaaden","private":true,"type":"module","version":"7.0.0"}

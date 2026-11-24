@@ -47,11 +47,11 @@ input,select,textarea{font:inherit}
 .ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}
 h1,h2,h3,.brand-name,.trip-route,.trip-price b{font-family:var(--font-display)}
 
-/* ---------- Coque appli ---------- */
-.app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:calc(var(--nav-h) + 24px)}
-@media (min-width:560px){
-  .app{box-shadow:0 0 0 2px var(--edge),0 24px 60px rgba(0,0,0,.5)}
-}
+/* ---------- Coque appli ----------
+   Pleine largeur : l'appli prend tout l'écran, comme une appli ordinaire
+   (v7.1 — avant, une colonne de 520 px centrée laissait de grandes marges
+   vides sur tablette et donnait un « effet site web »). */
+.app{width:100%;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--bg);position:relative;padding-bottom:calc(var(--nav-h) + 24px)}
 
 /* ---------- En-tête ---------- */
 .topbar{
@@ -694,3 +694,29 @@ fieldset.field{border:none;padding:0}
 .verify-status-box.pending{background:#3A2E0B;border-color:#6B5312}
 .verify-status-box.pending .ic{color:#F5C542}
 .verify-status-box.pending strong{color:#FFF3C4}
+
+/* ========== v7.1 : responsive — l'appli prend tout l'écran ==========
+   Tablette et grand écran : les trajets passent en grille (2 puis
+   3 colonnes), les marges s'élargissent, la barre de navigation et la
+   feuille de détail s'élargissent aussi. Sur téléphone, rien ne change. */
+@media (min-width:640px){
+  .screen{padding:0 24px 32px}
+  .marquee{margin-left:-24px;margin-right:-24px}
+  .results{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;align-items:start}
+  .results .empty{grid-column:1 / -1}
+  .bottomnav{max-width:560px}
+  .sheet{max-width:640px}
+  .hero h1{font-size:2.3rem}
+  .info-strip{flex-direction:row}
+  .info-item{flex:1}
+}
+@media (min-width:1024px){
+  .app{max-width:1200px}
+  .screen{padding:0 32px 40px}
+  .marquee{margin-left:-32px;margin-right:-32px}
+  .results{grid-template-columns:repeat(3,1fr)}
+  .hero{padding:32px 28px 72px}
+  .search-card,.form-card{padding:24px}
+  .chips{flex-wrap:wrap;overflow-x:visible}
+  .chip{width:calc((100% - 36px) / 4)}
+}

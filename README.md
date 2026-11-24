@@ -19,6 +19,14 @@ Un service de **Digifind** — transformation digitale & IA.
 - **Paiement** : espèces ou Orange Money, directement entre passager et conducteur.
 - **PWA installable** : manifest + service worker, fonctionne hors connexion après la première visite.
 
+## Nouveautés (v7.1 — responsive)
+
+- **L'appli prend tout l'écran** : la colonne de 520 px centrée est
+  supprimée. Sur tablette et grand écran, les trajets s'affichent en grille
+  (2 colonnes dès 640 px, 3 dès 1024 px, contenu plafonné à 1200 px), la
+  barre de navigation et la feuille de détail s'élargissent. Sur téléphone,
+  rien ne change (une seule colonne, pleine largeur).
+
 ## Nouveautés (v7 — backend partagé)
 
 - **Trajets, réservations, alertes et vérifications partagés** : un trajet

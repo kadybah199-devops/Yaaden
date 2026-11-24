@@ -1,8 +1,9 @@
 /* Yaaden — service worker : l'appli fonctionne hors connexion après la première visite. */
-const CACHE = 'yaaden-v6';
+const CACHE = 'yaaden-v7';
 const FILES = [
   './',
   './index.html',
+  './admin.html',
   './styles.css',
   './app.js',
   './manifest.json',
@@ -26,6 +27,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // Les API ne passent jamais par le cache : les données partagées
+  // (trajets, réservations, alertes) doivent toujours être fraîches.
+  if (new URL(event.request.url).pathname.startsWith('/api/')) return;
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then((cached) => {
       if (cached) return cached;

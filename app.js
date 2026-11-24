@@ -1,5 +1,7 @@
 /* Yaaden — covoiturage en Guinée. Un service Digifind.
-   V1 : 100 % locale, données de démo + localStorage, aucun backend. */
+   V7 : backend partagé (Vercel + Blob) — trajets, réservations, alertes
+   d'arrivée et vérifications visibles par tous les téléphones. Hors ligne,
+   l'appli continue avec la démo et les données locales. */
 'use strict';
 
 /* ---------- Constantes ---------- */
@@ -13,6 +15,9 @@ const LS_CHAT = 'yaaden_chat_v1';
 const LS_CHAT_SEEN = 'yaaden_chat_seen_v1';
 const LS_STATUS = 'yaaden_trip_status_v1';
 const LS_VERIFY = 'yaaden_verification_v1';
+const LS_DEVICE = 'yaaden_device_id_v1';
+/* API du backend partagé (adresse absolue : l'appli Android appelle le site). */
+const API_BASE = 'https://yaaden.vercel.app/api';
 /* WhatsApp d'assistance Yaaden (équipe Digifind à Conakry). */
 const SUPPORT_WA = '224620685645';
 const SUPPORT_WA_MSG = 'Bonjour, j\u2019ai besoin d\u2019aide sur Yaaden.';
@@ -116,6 +121,13 @@ let verification = loadJSON(LS_VERIFY, null);
 let userPos = null; /* {lat, lng} — position du téléphone, jamais enregistrée */
 let geoMode = false;
 let verifiedOnly = false;
+/* ---------- Backend partagé ---------- */
+let serverRides = [];      /* trajets réels du serveur (format API, non mappés) */
+let myServerTrips = [];    /* mes trajets publiés sur le serveur */
+let serverBookings = [];   /* mes réservations sur le serveur */
+let serverVerification = null; /* {status, plate} — statut vérifié côté serveur */
+let serverOnline = false;
+let refreshing = false;
 
 /* ---------- Utilitaires ---------- */
 function loadJSON(key, fallback) {
@@ -170,6 +182,144 @@ function toast(msg) {
   t._timer = setTimeout(function () { t.hidden = true; }, 3200);
 }
 
+/* ---------- Backend : identifiant, appels API, synchronisation ---------- */
+/* Identifiant stable de ce téléphone (sans compte) : il identifie le
+   conducteur et le passager côté serveur. */
+function deviceId() {
+  let id = null;
+  try { id = localStorage.getItem(LS_DEVICE); } catch (e) {}
+  if (!id) {
+    id = 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+    try { localStorage.setItem(LS_DEVICE, id); } catch (e) {}
+  }
+  return id;
+}
+/* Appel API avec délai (9 s) ; renvoie {status, data} ou lève une erreur. */
+async function apiFetch(path, opts) {
+  if (typeof fetch !== 'function') throw new Error('fetch indisponible');
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 9000) : null;
+  try {
+    const res = await fetch(API_BASE + path, Object.assign({}, opts || {}, ctrl ? { signal: ctrl.signal } : {}));
+    let data = {};
+    try { data = await res.json(); } catch (e) { data = {}; }
+    return { status: res.status, data: data };
+  } finally { if (timer) clearTimeout(timer); }
+}
+/* Convertit un trajet du serveur au format attendu par l'interface. */
+function mapServerRide(r) {
+  return {
+    id: 'srv-' + r.id, serverId: r.id, server: true,
+    type: r.type, from: r.from, to: r.to, date: r.date, time: r.time,
+    price: r.price, seats: r.seats, seatsLeftServer: r.seats_left,
+    driver: r.driver, rating: 5.0, trips: 0,
+    car: r.car || 'Véhicule non précisé', phone: r.phone,
+    options: r.options || [], meeting: r.meeting || '', desc: r.desc || '',
+    mine: r.driver_id === deviceId(), verified: !!r.verified, plate: r.plate || '',
+    trip_status: r.trip_status || 'idle', status: r.status || 'active'
+  };
+}
+/* Fusionne les réservations du serveur dans la liste locale (affichage). */
+function mergeServerBookings() {
+  const localOnly = bookings.filter(function (b) { return !b.serverBookingId; });
+  const fromServer = serverBookings.map(function (b) {
+    return { id: 'sb-' + b.id, serverBookingId: b.id, tripId: 'srv-' + b.ride_id, seats: b.seats, at: b.created_at };
+  });
+  bookings = localOnly.concat(fromServer);
+  saveJSON(LS_BOOKINGS, bookings);
+}
+/* Envoie les trajets publiés hors ligne et la demande de vérification en attente. */
+async function syncPending() {
+  const pending = myTrips.filter(function (t) { return t.pendingSync; });
+  for (const trip of pending) {
+    try {
+      const res = await apiFetch('/rides', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          driver_id: deviceId(), driver: trip.driver, phone: trip.phone,
+          type: trip.type, from: trip.from, to: trip.to, date: trip.date,
+          time: trip.time, price: trip.price, seats: trip.seats,
+          options: trip.options || [], meeting: trip.meeting || '',
+          desc: trip.desc || '', car: trip.car || ''
+        }) });
+      if (res.data && res.data.ok && res.data.ride) {
+        trip.serverId = res.data.ride.id;
+        delete trip.pendingSync;
+      }
+    } catch (e) { /* reste en attente, nouvel essai au prochain rafraîchissement */ }
+  }
+  if (pending.length) saveJSON(LS_TRIPS, myTrips);
+  if (verification && verification.pendingSync && profile && profile.name && profile.phone) {
+    try {
+      const res = await apiFetch('/verifications', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver_id: deviceId(), driver_name: profile.name,
+          driver_phone: profile.phone, plate: verification.plate }) });
+      if (res.data && res.data.ok) {
+        delete verification.pendingSync;
+        verification.status = res.data.status;
+        saveJSON(LS_VERIFY, verification);
+      }
+    } catch (e) { /* reste en attente */ }
+  }
+}
+/* Récupère les données partagées (trajets, réservations, vérification) puis
+   rafraîchit l'affichage. Silencieux en cas d'échec : l'appli continue avec
+   la démo et les données locales. */
+async function refreshServer() {
+  if (refreshing) return;
+  refreshing = true;
+  try {
+    const ridesRes = await apiFetch('/rides');
+    if (ridesRes.status === 200 && ridesRes.data.ok) {
+      serverRides = ridesRes.data.rides || [];
+      serverOnline = true;
+    }
+    const myRes = await apiFetch('/rides?driver_id=' + encodeURIComponent(deviceId()));
+    if (myRes.status === 200 && myRes.data.ok) {
+      myServerTrips = myRes.data.rides || [];
+      serverOnline = true;
+    }
+    const bkRes = await apiFetch('/bookings?passenger_id=' + encodeURIComponent(deviceId()));
+    if (bkRes.status === 200 && bkRes.data.ok) {
+      serverBookings = bkRes.data.bookings || [];
+      mergeServerBookings();
+      serverOnline = true;
+    }
+    const vRes = await apiFetch('/verifications?driver_id=' + encodeURIComponent(deviceId()));
+    if (vRes.status === 200 && vRes.data.ok) {
+      serverVerification = { status: vRes.data.status, plate: vRes.data.plate || '' };
+      if (serverVerification.status === 'verified' || serverVerification.status === 'pending') {
+        verification = Object.assign({}, verification, { status: serverVerification.status, plate: serverVerification.plate });
+        saveJSON(LS_VERIFY, verification);
+      }
+      serverOnline = true;
+    }
+    await syncPending();
+  } catch (e) { serverOnline = false; }
+  refreshing = false;
+  renderPublishNote();
+  refreshResults();
+  renderMyTrips();
+  renderVerifyStatus();
+  if (currentDetailId) renderDetail();
+}
+/* Statut de vérification (serveur si connu, sinon local). */
+function myVerificationStatus() {
+  if (serverVerification && serverVerification.status) return serverVerification.status;
+  return verification ? verification.status : 'none';
+}
+function renderPublishNote() {
+  const note = document.getElementById('publish-verify-note');
+  if (!note) return;
+  const st = myVerificationStatus();
+  if (st === 'verified') { note.hidden = true; return; }
+  note.hidden = false;
+  note.innerHTML = st === 'pending'
+    ? '<svg class="ic"><use href="#i-clock"/></svg><span><b>Vérification en cours</b> — vous pourrez publier dès que l\u2019équipe aura validé vos documents (sous 24 h).</span>'
+    : '<svg class="ic"><use href="#i-shield"/></svg><span><b>Publier demande une identité vérifiée.</b> Rendez-vous dans l\u2019onglet Profil pour envoyer vos documents.</span>';
+}
+
 /* ---------- Géolocalisation : voitures près de moi ---------- */
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -214,9 +364,14 @@ function sortByDistance(list) {
 
 /* ---------- Vérification conducteurs ---------- */
 function driverVerification(trip) {
+  if (trip.server) {
+    return { status: trip.verified ? 'verified' : 'none', plate: trip.plate || '' };
+  }
   if (trip.mine) {
-    if (verification && verification.status === 'verified') return { status:'verified', plate: verification.plate || '' };
-    if (verification && verification.status === 'pending') return { status:'pending', plate: verification.plate || '' };
+    const st = myVerificationStatus();
+    const plate = (serverVerification && serverVerification.plate) || (verification && verification.plate) || '';
+    if (st === 'verified') return { status:'verified', plate: plate };
+    if (st === 'pending') return { status:'pending', plate: plate };
     return { status:'none', plate: '' };
   }
   const info = DRIVER_INFO[trip.driver];
@@ -235,8 +390,35 @@ function verifyLineHTML(v) {
 }
 
 /* ---------- Alerte d'arrivée ---------- */
-function getTripStatus(id) { return tripStatus[id] || null; }
+function getTripStatus(id) {
+  const trip = findTrip(id);
+  if (trip && trip.server) {
+    return trip.trip_status && trip.trip_status !== 'idle' ? trip.trip_status : null;
+  }
+  return tripStatus[id] || null;
+}
 function setTripStatus(id, status) {
+  const trip = findTrip(id);
+  if (trip && trip.server) {
+    // Optimiste : on affiche tout de suite, on envoie au serveur en fond.
+    const prev = trip.trip_status;
+    trip.trip_status = status || 'idle';
+    const srv = serverRides.find(function (r) { return r.id === trip.serverId; });
+    if (srv) srv.trip_status = status || 'idle';
+    apiFetch('/trip-status', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ride_id: trip.serverId, driver_id: deviceId(), status: status || 'idle' }) })
+      .then(function (res) {
+        if (!res.data || !res.data.ok) throw new Error('refusé');
+      })
+      .catch(function () {
+        trip.trip_status = prev;
+        if (srv) srv.trip_status = prev;
+        refreshResults();
+        renderMyTrips();
+        toast('Impossible d\u2019envoyer le signal — vérifiez votre connexion.');
+      });
+    return;
+  }
   if (status) tripStatus[id] = status; else delete tripStatus[id];
   saveJSON(LS_STATUS, tripStatus);
 }
@@ -253,16 +435,28 @@ function arrivalStatusHTML(trip) {
   return '<div class="arrival-status idle"><svg class="ic"><use href="#i-clock"/></svg><span>Le conducteur vous préviendra quand il sera à côté.</span></div>';
 }
 
-/* ---------- Données : démo + publiés ---------- */
+/* ---------- Données : démo + serveur + publiés ---------- */
 function allTrips() {
   const demo = DEMO_TRIPS.map(function (t, i) {
-    return Object.assign({}, t, { id:'demo-' + i, type:'inter', date: dateFromOffset(t.day), mine:false });
+    return Object.assign({}, t, { id:'demo-' + i, type:'inter', date: dateFromOffset(t.day), mine:false, demo:true });
   });
   const city = DEMO_CITY_TRIPS.map(function (t, i) {
-    return Object.assign({}, t, { id:'city-' + i, type:'ville', date: dateFromOffset(t.day), mine:false });
+    return Object.assign({}, t, { id:'city-' + i, type:'ville', date: dateFromOffset(t.day), mine:false, demo:true });
   });
-  const mine = myTrips.map(function (t) { return Object.assign({}, t, { type: t.type || 'inter', mine:true }); });
-  return demo.concat(city, mine).sort(function (a, b) {
+  const server = serverRides.map(mapServerRide);
+  const serverIds = {};
+  server.forEach(function (t) { serverIds[t.serverId] = true; });
+  // Mes trajets du serveur (y compris annulés/passés pour « Mes trajets »).
+  myServerTrips.forEach(function (r) {
+    if (!serverIds[r.id]) {
+      server.push(mapServerRide(r));
+      serverIds[r.id] = true;
+    }
+  });
+  // Copie locale de mes trajets : on ignore ceux déjà reçus du serveur.
+  const mine = myTrips.filter(function (t) { return !t.serverId || !serverIds[t.serverId]; })
+    .map(function (t) { return Object.assign({}, t, { type: t.type || 'inter', mine:true }); });
+  return demo.concat(city, server, mine).sort(function (a, b) {
     return (a.date + a.time).localeCompare(b.date + b.time);
   });
 }
@@ -270,6 +464,9 @@ function findTrip(id) {
   return allTrips().find(function (t) { return t.id === id; }) || null;
 }
 function seatsLeft(trip) {
+  // Trajet du serveur : le serveur connaît les places restantes (toutes
+  // les réservations de tous les téléphones).
+  if (typeof trip.seatsLeftServer === 'number') return trip.seatsLeftServer;
   const taken = bookings.filter(function (b) { return b.tripId === trip.id; })
     .reduce(function (sum, b) { return sum + b.seats; }, 0);
   return Math.max(0, trip.seats - taken);
@@ -307,6 +504,7 @@ function tripCardHTML(trip) {
       arrivalBadgeHTML(trip) +
       (booked ? '<span class="booking-badge"><svg class="ic"><use href="#i-check"/></svg>Réservé : ' + booked.seats + ' place' + (booked.seats > 1 ? 's' : '') + '</span>' : '') +
       (trip.mine ? '<span class="pill"><svg class="ic"><use href="#i-car"/></svg>Mon trajet</span>' : '') +
+      (trip.demo ? '<span class="pill demo">Exemple</span>' : '') +
       optionPills(trip) +
     '</div>' +
     '<div class="ticket-perfo" aria-hidden="true"></div>' +
@@ -333,8 +531,21 @@ function renderResults(list, title) {
   box.innerHTML = list.map(tripCardHTML).join('');
 }
 function upcomingTrips(type) {
+  const today = dateFromOffset(0);
   return allTrips().filter(function (t) {
+    if (t.server && (t.status !== 'active' || t.date < today)) return false;
     return seatsLeft(t) > 0 && (!type || t.type === type);
+  });
+}
+/* Mes trajets publiés : copie locale + serveur (sans doublon). */
+function publishedTrips() {
+  const server = myServerTrips.map(mapServerRide);
+  const serverIds = {};
+  server.forEach(function (t) { serverIds[t.serverId] = true; });
+  const mine = myTrips.filter(function (t) { return !t.serverId || !serverIds[t.serverId]; })
+    .map(function (t) { return Object.assign({}, t, { type: t.type || 'inter', mine:true }); });
+  return server.concat(mine).sort(function (a, b) {
+    return (a.date + a.time).localeCompare(b.date + b.time);
   });
 }
 function typeTitle(type) {
@@ -489,9 +700,10 @@ function setPubType(type) {
 /* ---------- Mes trajets ---------- */
 function renderMyTrips() {
   const box = document.getElementById('my-trips');
+  const published = publishedTrips().filter(function (t) { return !t.server || t.status !== 'cancelled'; });
   document.getElementById('count-bookings').textContent = bookings.length || '';
-  document.getElementById('count-published').textContent = myTrips.length || '';
-  document.getElementById('trips-dot').hidden = bookings.length === 0 && myTrips.length === 0;
+  document.getElementById('count-published').textContent = published.length || '';
+  document.getElementById('trips-dot').hidden = bookings.length === 0 && published.length === 0;
 
   if (currentTab === 'bookings') {
     if (!bookings.length) {
@@ -514,15 +726,14 @@ function renderMyTrips() {
         '</div></div>';
     }).join('');
   } else {
-    if (!myTrips.length) {
+    if (!published.length) {
       box.innerHTML = '<div class="empty"><strong>Vous n\u2019avez publié aucun trajet</strong>' +
         '<button type="button" class="btn btn-primary btn-small" id="empty-publish2">Publier un trajet</button></div>';
       document.getElementById('empty-publish2').addEventListener('click', function () { showScreen('publish'); });
       return;
     }
-    box.innerHTML = myTrips.map(function (t) {
-      const reserved = bookings.filter(function (b) { return b.tripId === t.id; })
-        .reduce(function (s, b) { return s + b.seats; }, 0);
+    box.innerHTML = published.map(function (t) {
+      const reserved = t.seats - seatsLeft(t);
       const st = getTripStatus(t.id);
       const notifyMsg = 'Bonjour ! Je suis arrivé au point de rendez-vous pour le trajet Yaaden ' +
         t.from + ' → ' + t.to + ' du ' + shortDate(t.date) + ' à ' + t.time + '.';
@@ -556,6 +767,7 @@ function openDetail(id) {
   document.getElementById('detail-sheet').hidden = false;
   document.getElementById('sheet-backdrop').hidden = false;
   document.body.style.overflow = 'hidden';
+  refreshServer(); /* statut d'arrivée et places à jour */
 }
 function renderDetail() {
   const trip = findTrip(currentDetailId);
@@ -612,16 +824,97 @@ function closeDetail() {
   document.body.style.overflow = '';
   currentDetailId = null;
 }
-function confirmBooking() {
+async function confirmBooking() {
   const trip = findTrip(currentDetailId);
   if (!trip) return;
   if (seatsLeft(trip) < detailSeats) { toast('Plus assez de places sur ce trajet.'); return; }
+  if (trip.server) {
+    // Réservation réelle : le conducteur doit pouvoir joindre le passager.
+    if (!profile || !profile.name || !profile.phone) {
+      closeDetail();
+      showScreen('profile');
+      toast('Complétez votre profil (nom + téléphone WhatsApp) avant de réserver.');
+      return;
+    }
+    try {
+      const res = await apiFetch('/bookings', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ride_id: trip.serverId, passenger_id: deviceId(),
+          passenger_name: profile.name, passenger_phone: profile.phone, seats: detailSeats }) });
+      if (!res.data || !res.data.ok) {
+        toast(res.data && res.data.error ? res.data.error : 'Réservation impossible pour le moment.');
+        return;
+      }
+      closeDetail();
+      toast('Réservation confirmée : ' + detailSeats + ' place' + (detailSeats > 1 ? 's' : '') + ' — ' + trip.from + ' → ' + trip.to + ' !');
+      await refreshServer();
+      return;
+    } catch (e) {
+      toast('Impossible de réserver hors ligne — vérifiez votre connexion.');
+      return;
+    }
+  }
   bookings.push({ id:'b-' + Date.now(), tripId: trip.id, seats: detailSeats, at: new Date().toISOString() });
   saveJSON(LS_BOOKINGS, bookings);
   closeDetail();
   refreshResults();
   renderMyTrips();
   toast('Réservation confirmée : ' + detailSeats + ' place' + (detailSeats > 1 ? 's' : '') + ' — ' + trip.from + ' → ' + trip.to + ' !');
+}
+/* Annule une réservation (serveur si réelle, sinon locale). */
+async function cancelBookingById(bookingId) {
+  const b = bookings.find(function (x) { return x.id === bookingId; });
+  if (!b) return;
+  if (b.serverBookingId) {
+    try {
+      const res = await apiFetch('/bookings?id=' + encodeURIComponent(b.serverBookingId), { method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passenger_id: deviceId() }) });
+      if (!res.data || !res.data.ok) {
+        toast(res.data && res.data.error ? res.data.error : 'Annulation impossible pour le moment.');
+        return;
+      }
+    } catch (e) {
+      toast('Impossible d\u2019annuler hors ligne — vérifiez votre connexion.');
+      return;
+    }
+    await refreshServer();
+  } else {
+    bookings = bookings.filter(function (x) { return x.id !== bookingId; });
+    saveJSON(LS_BOOKINGS, bookings);
+    renderMyTrips();
+    refreshResults();
+  }
+  toast('Réservation annulée.');
+}
+/* Supprime un trajet publié (serveur si réel, sinon local). */
+async function cancelTripById(tripId) {
+  const trip = findTrip(tripId);
+  if (trip && trip.server) {
+    try {
+      const res = await apiFetch('/rides?id=' + encodeURIComponent(trip.serverId), { method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver_id: deviceId() }) });
+      if (!res.data || !res.data.ok) {
+        toast(res.data && res.data.error ? res.data.error : 'Suppression impossible pour le moment.');
+        return;
+      }
+    } catch (e) {
+      toast('Impossible de supprimer hors ligne — vérifiez votre connexion.');
+      return;
+    }
+    myTrips = myTrips.filter(function (t) { return t.serverId !== trip.serverId; });
+    saveJSON(LS_TRIPS, myTrips);
+    await refreshServer();
+  } else {
+    myTrips = myTrips.filter(function (t) { return t.id !== tripId; });
+    bookings = bookings.filter(function (b) { return b.tripId !== tripId; });
+    saveJSON(LS_TRIPS, myTrips);
+    saveJSON(LS_BOOKINGS, bookings);
+    renderMyTrips();
+    refreshResults();
+  }
+  toast('Trajet supprimé.');
 }
 
 /* ---------- Assistante Yaa : aide instantanée + WhatsApp ---------- */
@@ -637,7 +930,7 @@ const YAA_KB = [
   { keys:['bonjour','salut','hello','coucou','bonsoir'], answer:'Bonjour ! Je suis Yaa, l\u2019assistante Yaaden. Posez-moi votre question : réservation, paiement, publication d\u2019un trajet… Je réponds tout de suite.' },
   { keys:['merci'], answer:'Avec plaisir ! Bon voyage avec Yaaden.' },
   { keys:['reserver','reservation','booker','prendre une place','prendre place','je veux aller'], answer:'Pour réserver : cherchez votre trajet, touchez sa carte, choisissez le nombre de places puis « Confirmer la réservation ». Vous retrouvez tout dans « Mes trajets », et vous pouvez écrire au conducteur sur WhatsApp.' },
-  { keys:['publier','publie','proposer un trajet','offrir une place','jai une voiture','j ai une voiture'], answer:'Pour publier un trajet : touchez « Publier » en bas de l\u2019écran, choisissez Entre villes ou En ville, puis indiquez départ, arrivée, date, heure, places et prix. C\u2019est gratuit et vos passagers vous paient directement.' },
+  { keys:['publier','publie','proposer un trajet','offrir une place','jai une voiture','j ai une voiture'], answer:'Pour publier un trajet, votre identité doit d\u2019abord être vérifiée : allez dans « Profil », section « Vérification conducteur », et envoyez vos documents. Une fois vérifié, touchez « Publier » en bas de l\u2019écran, choisissez Entre villes ou En ville, puis indiquez départ, arrivée, date, heure, places et prix. Votre trajet est visible par tous les utilisateurs de Yaaden.' },
   { keys:['payer','paiement','paye','orange money','especes','cash','argent'], answer:'Le paiement se fait directement avec le conducteur, au moment du trajet : en espèces ou via Orange Money. Yaaden ne prend aucune commission pour le moment.' },
   { keys:['annuler','annulation','supprimer ma reservation','supprimer reservation'], answer:'Pour annuler : allez dans « Mes trajets », puis touchez « Annuler » à côté de votre réservation. Pensez à prévenir le conducteur sur WhatsApp.' },
   { keys:['prix','tarif','cout','combien','cher'], answer:'En ville à Conakry : 10 000 à 25 000 GNF par place, comme le taxi en commun — mais sans la longue attente au bord de la route. Entre villes, par exemple Conakry → Kindia dès 120 000 GNF.' },
@@ -645,9 +938,9 @@ const YAA_KB = [
   { keys:['entre villes','long trajet','voyage','kindia','labe','kankan','mamou','boke','voyager'], answer:'Pour les longs trajets, choisissez « Entre villes » : Conakry → Kindia, Labé, Kankan, Mamou, Boké et plus. Les conducteurs partent avec des places libres — réservez la vôtre.' },
   { keys:['contacter','joindre','parler au conducteur','numero','telephone conducteur','whatsapp conducteur'], answer:'Pour joindre un conducteur : ouvrez la fiche de son trajet et touchez le bouton WhatsApp. Vous pouvez lui écrire avant même de réserver.' },
   { keys:['securite','sur','confiance','dangereux','risque','arnaque'], answer:'Regardez le badge « Vérifié » sur la carte du trajet : il veut dire que la pièce d\u2019identité et le permis du conducteur ont été contrôlés par l\u2019équipe Yaaden. Vérifiez aussi sa note, son nombre de trajets et sa plaque, et échangez sur WhatsApp avant le départ. En cas de problème, écrivez à l\u2019équipe Yaaden sur WhatsApp avec le bouton vert ci-dessous.' },
-  { keys:['verifi','verifier','identite','piece','permis','badge'], answer:'Pour devenir conducteur vérifié : allez dans « Profil », section « Vérification conducteur », puis envoyez la photo de votre pièce d\u2019identité et un selfie. L\u2019équipe Yaaden contrôle vos documents sous 24 h et vos trajets affichent ensuite le badge « Vérifié ». Côté passager, vous pouvez aussi filtrer la recherche sur « Conducteurs vérifiés ».' },
+  { keys:['verifi','verifier','identite','piece','permis','badge'], answer:'Pour devenir conducteur vérifié : allez dans « Profil », section « Vérification conducteur », puis envoyez la photo de votre pièce d\u2019identité et un selfie. L\u2019équipe Yaaden contrôle vos documents sous 24 h. Une fois vérifié, vous pouvez publier des trajets : ils affichent le badge « Vérifié », visible par tous. Côté passager, vous pouvez aussi filtrer la recherche sur « Conducteurs vérifiés ».' },
   { keys:['arrive','arrivee','ou est','pres de moi','a cote','geolocalisation','position','pret'], answer:'Touchez « Voitures près de moi » sur l\u2019accueil : Yaaden utilise votre position pour montrer les départs proches de vous. Et quand vous avez réservé, le conducteur signale « J\u2019arrive » puis « Je suis arrivé » : vous le voyez dans « Mes trajets ». Vous pouvez aussi lui écrire sur WhatsApp pour savoir où il en est.' },
-  { keys:['profil','compte','inscrire','inscription','creer un compte','donnees'], answer:'Pas de compte à créer : remplissez simplement votre profil dans l\u2019onglet « Profil » (nom, téléphone WhatsApp, véhicule). Vos données restent sur votre téléphone.' },
+  { keys:['profil','compte','inscrire','inscription','creer un compte','donnees'], answer:'Pas de compte à créer : remplissez simplement votre profil dans l\u2019onglet « Profil » (nom, téléphone WhatsApp, véhicule). Vos trajets publiés et vos réservations sont partagés avec les autres utilisateurs de Yaaden.' },
   { keys:['gratuit','commission','frais'], answer:'Yaaden est gratuit pour le moment : aucune commission sur vos trajets, le paiement va directement au conducteur.' },
   { keys:['bagage','valise','sac'], answer:'Regardez les options sur la carte du trajet : si « Bagages acceptés » est affiché, le conducteur a de la place pour vos bagages.' },
   { keys:['humain','personne','equipe','assistance','aide','quelquun'], answer:'Bien sûr : touchez le bouton vert « Parler à une personne sur WhatsApp » ci-dessous, l\u2019équipe Yaaden vous répond rapidement.' },
@@ -741,6 +1034,7 @@ function showScreen(name) {
   document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.screen === name); });
   document.getElementById('screen-' + name).classList.add('active');
   if (name === 'trips') renderMyTrips();
+  if (name === 'trips' || name === 'publish') refreshServer(); /* données à jour */
   window.scrollTo({ top: 0, behavior:'smooth' });
 }
 
@@ -830,6 +1124,11 @@ function init() {
   renderMyTrips();
   fillProfileForm();
   renderVerifyStatus();
+  renderPublishNote();
+  refreshServer(); /* données partagées, en arrière-plan */
+  setInterval(function () {
+    if (!document.hidden) refreshServer();
+  }, 60000); /* actualisation toutes les minutes */
 
   /* Bascule Entre villes / En ville (recherche + publication) */
   document.querySelectorAll('[data-search-type]').forEach(function (b) {
@@ -900,23 +1199,12 @@ function init() {
     if (card) { openDetail(card.dataset.trip); return; }
     const cancelB = e.target.closest('[data-cancel-booking]');
     if (cancelB) {
-      bookings = bookings.filter(function (b) { return b.id !== cancelB.dataset.cancelBooking; });
-      saveJSON(LS_BOOKINGS, bookings);
-      renderMyTrips();
-      refreshResults();
-      toast('Réservation annulée.');
+      cancelBookingById(cancelB.dataset.cancelBooking);
       return;
     }
     const cancelT = e.target.closest('[data-cancel-trip]');
     if (cancelT) {
-      const id = cancelT.dataset.cancelTrip;
-      myTrips = myTrips.filter(function (t) { return t.id !== id; });
-      bookings = bookings.filter(function (b) { return b.tripId !== id; });
-      saveJSON(LS_TRIPS, myTrips);
-      saveJSON(LS_BOOKINGS, bookings);
-      renderMyTrips();
-      refreshResults();
-      toast('Trajet supprimé.');
+      cancelTripById(cancelT.dataset.cancelTrip);
     }
   });
 
@@ -937,30 +1225,8 @@ function init() {
       document.getElementById('pub-seats-val').textContent = pubSeats;
     });
   });
-  document.getElementById('publish-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const from = document.getElementById('pub-from').value;
-    const to = document.getElementById('pub-to').value;
-    if (from === to) { toast('Le départ et l\u2019arrivée doivent être différents.'); return; }
-    const name = (profile && profile.name) ? profile.name : 'Vous';
-    const trip = {
-      id:'mine-' + Date.now(),
-      type: pubType,
-      from: from, to: to,
-      date: document.getElementById('pub-date').value,
-      time: document.getElementById('pub-time').value,
-      price: Number(document.getElementById('pub-price').value),
-      seats: pubSeats,
-      driver: name,
-      rating: 5.0, trips: 0,
-      car: (profile && profile.car) ? profile.car : 'Véhicule non précisé',
-      phone: (profile && profile.phone) ? profile.phone : '',
-      options: ['clim','bagages','musique'].filter(function (o) { return document.getElementById('opt-' + o).checked; }),
-      meeting: document.getElementById('pub-meeting').value.trim(),
-      desc: document.getElementById('pub-desc').value.trim()
-    };
-    myTrips.push(trip);
-    saveJSON(LS_TRIPS, myTrips);
+  /* Après une publication : formulaire remis à zéro, on montre « Mes trajets ». */
+  function afterPublish(from, to, msg) {
     document.getElementById('publish-form').reset();
     document.getElementById('pub-date').value = dateFromOffset(1);
     document.getElementById('pub-time').value = '08:00';
@@ -971,7 +1237,83 @@ function init() {
     currentTab = 'published';
     document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === 'published'); });
     showScreen('trips');
-    toast('Votre trajet ' + from + ' → ' + to + ' est publié !');
+    toast(msg);
+  }
+  document.getElementById('publish-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const from = document.getElementById('pub-from').value;
+    const to = document.getElementById('pub-to').value;
+    if (from === to) { toast('Le départ et l\u2019arrivée doivent être différents.'); return; }
+    if (!profile || !profile.name || !profile.phone) {
+      showScreen('profile');
+      toast('Complétez votre profil (nom + téléphone WhatsApp) avant de publier.');
+      return;
+    }
+    // Statut de vérification : on le vérifie auprès du serveur si besoin.
+    let st = myVerificationStatus();
+    if (st !== 'verified' && !serverVerification) {
+      try {
+        const vRes = await apiFetch('/verifications?driver_id=' + encodeURIComponent(deviceId()));
+        if (vRes.status === 200 && vRes.data.ok) {
+          serverVerification = { status: vRes.data.status, plate: vRes.data.plate || '' };
+          st = vRes.data.status;
+        }
+      } catch (err) { /* hors ligne : on se base sur le statut local */ }
+    }
+    if (st !== 'verified') {
+      if (st === 'pending') {
+        toast('Vérification en cours — vous pourrez publier dès que l\u2019équipe aura validé vos documents (sous 24 h).');
+      } else {
+        showScreen('profile');
+        toast('Pour publier, faites d\u2019abord vérifier votre identité (onglet Profil).');
+      }
+      return;
+    }
+    const trip = {
+      id:'mine-' + Date.now(),
+      type: pubType,
+      from: from, to: to,
+      date: document.getElementById('pub-date').value,
+      time: document.getElementById('pub-time').value,
+      price: Number(document.getElementById('pub-price').value),
+      seats: pubSeats,
+      driver: profile.name,
+      rating: 5.0, trips: 0,
+      car: (profile && profile.car) ? profile.car : 'Véhicule non précisé',
+      phone: profile.phone,
+      options: ['clim','bagages','musique'].filter(function (o) { return document.getElementById('opt-' + o).checked; }),
+      meeting: document.getElementById('pub-meeting').value.trim(),
+      desc: document.getElementById('pub-desc').value.trim()
+    };
+    try {
+      const res = await apiFetch('/rides', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver_id: deviceId(), driver: trip.driver, phone: trip.phone,
+          type: trip.type, from: trip.from, to: trip.to, date: trip.date, time: trip.time,
+          price: trip.price, seats: trip.seats, options: trip.options,
+          meeting: trip.meeting, desc: trip.desc, car: trip.car }) });
+      if (res.data && res.data.ok && res.data.ride) {
+        trip.serverId = res.data.ride.id;
+        myTrips.push(trip);
+        saveJSON(LS_TRIPS, myTrips);
+        afterPublish(from, to, 'Votre trajet ' + from + ' → ' + to + ' est publié ! Tous les utilisateurs de Yaaden peuvent le voir.');
+        await refreshServer();
+        return;
+      }
+      if (res.status === 403) {
+        serverVerification = { status: 'none', plate: '' };
+        showScreen('profile');
+        toast('Votre identité n\u2019est pas vérifiée — faites une demande dans l\u2019onglet Profil.');
+        return;
+      }
+      toast(res.data && res.data.error ? res.data.error : 'Publication impossible pour le moment.');
+    } catch (err) {
+      // Hors ligne : on garde le trajet sur le téléphone, il sera partagé
+      // automatiquement dès que la connexion revient.
+      trip.pendingSync = true;
+      myTrips.push(trip);
+      saveJSON(LS_TRIPS, myTrips);
+      afterPublish(from, to, 'Trajet enregistré sur votre téléphone (hors ligne) — il sera partagé dès que vous serez en ligne.');
+    }
   });
 
   /* Profil */
@@ -990,22 +1332,44 @@ function init() {
   /* Vérification conducteur */
   document.getElementById('verify-id').addEventListener('change', function (e) { previewFile(e.target, 'verify-id-preview'); });
   document.getElementById('verify-selfie').addEventListener('change', function (e) { previewFile(e.target, 'verify-selfie-preview'); });
-  document.getElementById('verify-form').addEventListener('submit', function (e) {
+  document.getElementById('verify-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     const plate = document.getElementById('verify-plate').value.trim();
     const idInput = document.getElementById('verify-id');
     const selfieInput = document.getElementById('verify-selfie');
+    if (!profile || !profile.name || !profile.phone) {
+      toast('Complétez d\u2019abord votre profil (nom + téléphone WhatsApp) juste au-dessus.');
+      return;
+    }
     if (!plate) { toast('Indiquez votre plaque d\u2019immatriculation.'); return; }
     if (!idInput._data) { toast('Ajoutez la photo de votre pièce d\u2019identité.'); return; }
     if (!selfieInput._data) { toast('Ajoutez un selfie (photo de vous, face visible).'); return; }
     verification = { status:'pending', plate: plate, idDoc: idInput._data, selfie: selfieInput._data, at: new Date().toISOString() };
+    // La demande part aussi au serveur (visible par l'équipe sur la page admin).
+    try {
+      const res = await apiFetch('/verifications', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver_id: deviceId(), driver_name: profile.name,
+          driver_phone: profile.phone, plate: plate }) });
+      if (res.data && res.data.ok) {
+        verification.status = res.data.status;
+        serverVerification = { status: res.data.status, plate: plate };
+      } else {
+        verification.pendingSync = true;
+      }
+    } catch (err) {
+      verification.pendingSync = true;
+    }
     saveJSON(LS_VERIFY, verification);
     renderVerifyStatus();
+    renderPublishNote();
     refreshResults();
     renderMyTrips();
-    const name = (profile && profile.name) ? profile.name : 'Bonjour';
+    const name = profile.name;
     window.open(waLink(SUPPORT_WA, name + ', conducteur Yaaden. Je viens d\u2019envoyer ma demande de vérification (plaque ' + plate + '). Voici mes documents :'), '_blank');
-    toast('Demande envoyée ! Envoyez vos photos à l\u2019équipe sur WhatsApp.');
+    toast(verification.pendingSync
+      ? 'Demande enregistrée (hors ligne) — elle sera envoyée dès que vous serez en ligne. Envoyez vos photos à l\u2019équipe sur WhatsApp.'
+      : 'Demande envoyée ! Envoyez vos photos à l\u2019équipe sur WhatsApp.');
   });
 
   /* Feuille détail */
@@ -1022,12 +1386,9 @@ function init() {
     }
     if (e.target.closest('#detail-book')) { confirmBooking(); return; }
     if (e.target.closest('#detail-cancel-booking')) {
-      bookings = bookings.filter(function (b) { return b.tripId !== currentDetailId; });
-      saveJSON(LS_BOOKINGS, bookings);
+      const b = myBookingFor(currentDetailId);
       closeDetail();
-      renderMyTrips();
-      refreshResults();
-      toast('Réservation annulée.');
+      if (b) cancelBookingById(b.id);
     }
   });
 
